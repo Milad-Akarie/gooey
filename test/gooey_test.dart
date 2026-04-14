@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gooey/gooey.dart';
+import 'package:gooey/src/snapshot_helper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -496,13 +498,13 @@ void main() {
       expect(widget.blobOpacity, equals(0.8));
     });
 
-    testWidgets('default blobOpacity is null', (tester) async {
+    testWidgets('default blobOpacity is 1.0', (tester) async {
       final widget = GooeyZone.withGradient(
         gradient: const LinearGradient(colors: [Colors.red]),
         child: const SizedBox(),
       );
 
-      expect(widget.blobOpacity, isNull);
+      expect(widget.blobOpacity, equals(1.0));
     });
 
     testWidgets('renders blob with gradient', (tester) async {
@@ -686,12 +688,49 @@ void main() {
     });
   });
 
-  group('RenderGooeyZone properties', () {
-    testWidgets('updates color on rebuild', (tester) async {
+  group('GooeyZone shouldSnapshot', () {
+    testWidgets('default shouldSnapshot is true', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        child: const SizedBox(),
+      );
+
+      expect(widget.shouldSnapshot, isTrue);
+    });
+
+    testWidgets('passes shouldSnapshot to constructor', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        shouldSnapshot: false,
+        child: const SizedBox(),
+      );
+
+      expect(widget.shouldSnapshot, isFalse);
+    });
+
+    testWidgets('renders with shouldSnapshot false', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: GooeyZone(
-            color: Colors.red,
+            color: Colors.indigo,
+            shouldSnapshot: false,
+            child: GooeyBlob(
+              child: const SizedBox(width: 50, height: 50),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+      expect(find.byType(GooeyBlob), findsOneWidget);
+    });
+
+    testWidgets('updates shouldSnapshot on rebuild', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            shouldSnapshot: true,
             child: const SizedBox(),
           ),
         ),
@@ -700,7 +739,43 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: GooeyZone(
-            color: Colors.blue,
+            color: Colors.indigo,
+            shouldSnapshot: false,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      final zone = tester.widget<GooeyZone>(find.byType(GooeyZone));
+      expect(zone.shouldSnapshot, isFalse);
+    });
+  });
+
+  group('SnapshotHelper', () {
+    test('creates instance with layer and pixelRatio', () {
+      final layer = ContainerLayer();
+      final helper = SnaphshotHelper(layer, pixelRatio: 2.0);
+
+      expect(helper.layer, equals(layer));
+      expect(helper.pixelRatio, equals(2.0));
+    });
+
+    test('creates instance with default pixelRatio', () {
+      final layer = ContainerLayer();
+      final helper = SnaphshotHelper(layer);
+
+      expect(helper.pixelRatio, equals(1.0));
+    });
+  });
+
+  group('GooeyZone.withGradient with RadialGradient', () {
+    testWidgets('renders with RadialGradient', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone.withGradient(
+            gradient: const RadialGradient(
+              colors: [Colors.red, Colors.blue],
+            ),
             child: const SizedBox(),
           ),
         ),
@@ -709,17 +784,64 @@ void main() {
       expect(find.byType(GooeyZone), findsOneWidget);
     });
 
-    testWidgets('updates blurRadius on rebuild', (tester) async {
+    testWidgets('passes RadialGradient to constructor', (tester) async {
+      final gradient = const RadialGradient(colors: [Colors.red, Colors.blue]);
+      final widget = GooeyZone.withGradient(
+        gradient: gradient,
+        child: const SizedBox(),
+      );
+
+      expect(widget.gradient, equals(gradient));
+    });
+  });
+
+  group('GooeyZone.withGradient with SweepGradient', () {
+    testWidgets('renders with SweepGradient', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: GooeyZone(
-            color: Colors.indigo,
-            blurRadius: 10.0,
+          home: GooeyZone.withGradient(
+            gradient: const SweepGradient(
+              colors: [Colors.red, Colors.blue],
+            ),
             child: const SizedBox(),
           ),
         ),
       );
 
+      expect(find.byType(GooeyZone), findsOneWidget);
+    });
+
+    testWidgets('passes SweepGradient to constructor', (tester) async {
+      final gradient = const SweepGradient(colors: [Colors.red, Colors.blue]);
+      final widget = GooeyZone.withGradient(
+        gradient: gradient,
+        child: const SizedBox(),
+      );
+
+      expect(widget.gradient, equals(gradient));
+    });
+  });
+
+  group('GooeyZone debugFillProperties', () {
+    testWidgets('adds color to diagnostic properties', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      final element = tester.element(find.byType(GooeyZone));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'color'), isTrue);
+    });
+
+    testWidgets('adds blurRadius to diagnostic properties', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: GooeyZone(
@@ -730,21 +852,15 @@ void main() {
         ),
       );
 
-      final zone = tester.widget<GooeyZone>(find.byType(GooeyZone));
-      expect(zone.blurRadius, equals(20.0));
+      final element = tester.element(find.byType(GooeyZone));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'blurRadius'), isTrue);
     });
 
-    testWidgets('updates threshold on rebuild', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: GooeyZone(
-            color: Colors.indigo,
-            threshold: 0.3,
-            child: const SizedBox(),
-          ),
-        ),
-      );
-
+    testWidgets('adds threshold to diagnostic properties', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: GooeyZone(
@@ -755,8 +871,143 @@ void main() {
         ),
       );
 
-      final zone = tester.widget<GooeyZone>(find.byType(GooeyZone));
-      expect(zone.threshold, equals(0.8));
+      final element = tester.element(find.byType(GooeyZone));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'threshold'), isTrue);
+    });
+
+    testWidgets('adds blobOpacity to diagnostic properties', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            blobOpacity: 0.5,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      final element = tester.element(find.byType(GooeyZone));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'blobOpacity'), isTrue);
+    });
+  });
+
+  group('GooeyBlob debugFillProperties', () {
+    testWidgets('adds shape to diagnostic properties', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            child: GooeyBlob(
+              shape: const BlobShape.circle(),
+              child: const SizedBox(),
+            ),
+          ),
+        ),
+      );
+
+      final element = tester.element(find.byType(GooeyBlob));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'shape'), isTrue);
+    });
+
+    testWidgets('adds cutout flag to diagnostic properties', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            child: GooeyBlob(
+              cutout: true,
+              child: const SizedBox(),
+            ),
+          ),
+        ),
+      );
+
+      final element = tester.element(find.byType(GooeyBlob));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'cutout'), isTrue);
+    });
+
+    testWidgets('adds color to diagnostic properties', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            child: GooeyBlob(
+              color: Colors.red,
+              child: const SizedBox(),
+            ),
+          ),
+        ),
+      );
+
+      final element = tester.element(find.byType(GooeyBlob));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'color'), isTrue);
+    });
+  });
+
+  group('GooeyBlob with child widget size', () {
+    testWidgets('renders correctly with large child', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            child: GooeyBlob(
+              child: SizedBox(width: 200, height: 200),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyBlob), findsOneWidget);
+    });
+
+    testWidgets('renders correctly with small child', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            child: GooeyBlob(
+              child: SizedBox(width: 10, height: 10),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyBlob), findsOneWidget);
+    });
+
+    testWidgets('renders correctly with zero-size child', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            child: GooeyBlob(
+              child: Container(),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyBlob), findsOneWidget);
     });
   });
 }

@@ -29,6 +29,7 @@ While the gooey effect is optimized for maximum performance, this package is **n
 - **Cutout support** — Create holes in the goo with `cutout: true`
 - **Custom colors/gradients** — Per-blob or zone-wide fill coloring
 - **Optimized rendering** — Uses Flutter's compositing layers for smooth performance
+- **Texture caching** — Optional snapshot mode for static blobs improves performance
 
 ## Getting started
 
@@ -132,6 +133,54 @@ GooeyBlob(
   child: Icon(Icons.close),
 )
 ```
+
+### Texture Caching (Snapshot Mode)
+
+By default, GooeyZone caches the blob layer as a texture ([shouldSnapshot]: true). This provides optimal performance for static blobs since the gooey effect is computed once and then rendered as a cached image.
+
+When animating blobs, disable snapshot mode to render the gooey effect live each frame:
+
+```dart
+class _ExampleState extends State<Example> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    )..addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GooeyZone(
+      // Disable snapshot during animation for live rendering
+      shouldSnapshot: !_controller.isAnimating,
+      color: Colors.indigo,
+      child: Column(
+        children: [
+          GooeyBlob(
+            // Animate blob position/size here
+            child: Icon(Icons.add),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+Once the animation completes, set [shouldSnapshot] back to true to re-enable texture caching and restore optimal performance.
 
 ## Example
 

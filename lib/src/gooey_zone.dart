@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:gooey/src/snapshot_helper.dart';
 part 'gooey_blob.dart';
 
 /// A zone that renders gooey blobs behind its registered [GooeyBlob] children.
@@ -30,6 +31,7 @@ class GooeyZone extends SingleChildRenderObjectWidget {
     this.threshold = 0.5,
     required super.child,
     this.blobOpacity = 1.0,
+    this.shouldSnapshot = true,
   }) : gradient = null;
 
   /// Creates a [GooeyZone] with a custom gradient fill for the blobs.
@@ -40,6 +42,7 @@ class GooeyZone extends SingleChildRenderObjectWidget {
     this.blurRadius = 12.0,
     this.threshold = 0.5,
     required super.child,
+    this.shouldSnapshot = true,
   }) : color = Colors.white;
 
   /// Optional gradient to fill the blobs. If null, [color] is used as a solid fill.
@@ -70,6 +73,26 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   /// At 1.0 (default) no extra layer is pushed. At 0.0 blobs are skipped entirely.
   final double blobOpacity;
 
+  /// If true, the zone will bake its blobs into a texture and reuse it across frames until any blob reports a change.
+  ///
+  /// If false, the zone will apply the goo effect live every frame without caching.
+  ///
+  /// Ideally this should stay true for static blobs, conditionally and temporarily set to false for animated blobs,
+  /// and then set back to true when the animation is done to cache the final state.
+  ///
+  /// ```dart
+  ///  GooeyZone(
+  ///    shouldSnapshot: !isAnimating, // e.g !animationController.isAnimating
+  ///    child: ..
+  ///   );
+  /// ```
+  ///
+  /// This parameter is useful when animating blobs. When an animation is running,
+  /// set [shouldSnapshot] to false to render the gooey effect live each frame.
+  /// Once the animation completes, set it back to true to enable texture
+  /// caching and improve performance.
+  final bool shouldSnapshot;
+
   @override
   RenderGooeyZone createRenderObject(BuildContext context) {
     return RenderGooeyZone(
@@ -78,6 +101,8 @@ class GooeyZone extends SingleChildRenderObjectWidget {
       threshold: threshold,
       gradient: gradient,
       blobOpacity: blobOpacity,
+      shouldSnapshot: shouldSnapshot,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
     );
   }
 
@@ -88,7 +113,9 @@ class GooeyZone extends SingleChildRenderObjectWidget {
       ..blurRadius = blurRadius
       ..threshold = threshold
       ..gradient = gradient
-      ..blobOpacity = blobOpacity;
+      ..shouldSnapshot = shouldSnapshot
+      ..blobOpacity = blobOpacity
+      ..devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
   }
 
   @override
@@ -109,13 +136,18 @@ class RenderGooeyZone extends RenderProxyBox {
     required double blurRadius,
     required double threshold,
     required double blobOpacity,
+    required bool shouldSnapshot,
+    required double devicePixelRatio,
     Gradient? gradient,
+
     RenderBox? child,
   }) : _color = color,
        _blurRadius = blurRadius,
        _threshold = threshold,
        _blobOpacity = blobOpacity,
        _gradient = gradient,
+       _shouldSnapshot = shouldSnapshot,
+       _devicePixelRatio = devicePixelRatio,
        super(child);
 
   Paint? _blobPaint;
@@ -163,6 +195,7 @@ class RenderGooeyZone extends RenderProxyBox {
     if (_gradient == value) return;
     _gradient = value;
     _blobPaint = null; // Invalidate blob paint cache
+    _invalidateSnapshot();
     markNeedsPaint();
   }
 
@@ -171,6 +204,7 @@ class RenderGooeyZone extends RenderProxyBox {
     if (_color == value) return;
     _color = value;
     _blobPaint = null; // Invalidate blob paint cache
+    _invalidateSnapshot();
     markNeedsPaint();
   }
 
@@ -179,6 +213,7 @@ class RenderGooeyZone extends RenderProxyBox {
     if (_blurRadius == value) return;
     _blurRadius = value;
     _blobPaint = null; // Invalidate blob paint cache
+    _invalidateSnapshot();
     markNeedsPaint();
   }
 
@@ -197,29 +232,105 @@ class RenderGooeyZone extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  double _devicePixelRatio;
+  set devicePixelRatio(double value) {
+    if (_devicePixelRatio == value) return;
+    _devicePixelRatio = value;
+    _blobPaint = null;
+    _invalidateSnapshot();
+    markNeedsPaint();
+  }
+
   @override
   bool get isRepaintBoundary => true;
 
   @override
   bool get alwaysNeedsCompositing => true;
 
+  ui.Image? _blobsSnapshot;
+
+  // The flag that toggles between "Texture Mode" and "Live Filter Mode"
+  bool _shouldSnapshot = true;
+  set shouldSnapshot(bool value) {
+    if (_shouldSnapshot == value) return;
+    _shouldSnapshot = value;
+    // If we stop snapshotting, kill the old image immediately.
+    // If we start snapshotting, we'll bake on the next paint.
+    _invalidateSnapshot();
+    markNeedsPaint();
+  }
+
+  /// Public method for blobs to report changes
+  void invalidateSnapshot() {
+    // We only care about invalidating if we are actually in snapshot mode.
+    // If shouldSnapshot is false, we are already painting live every frame.
+    if (_shouldSnapshot && _blobsSnapshot != null) {
+      _invalidateSnapshot();
+      markNeedsPaint();
+    }
+  }
+
+  Size? _lastSize;
+  @override
+  void performLayout() {
+    super.performLayout();
+    if (size == _lastSize) return;
+    _lastSize = size;
+    _blobPaint = null;
+    _invalidateSnapshot();
+  }
+
+  void _invalidateSnapshot() {
+    _blobsSnapshot?.dispose();
+    _blobsSnapshot = null;
+  }
+
   @override
   void dispose() {
     _opacityLayerHandle.layer = null;
     _filterLayerHandler.layer = null;
+    _invalidateSnapshot();
     super.dispose();
   }
 
+  @override
+  void reassemble() {
+    // We kill the snapshot so you can see your code changes immediately.
+    _invalidateSnapshot();
+    super.reassemble();
+  }
+
   void _paintBlobs(PaintingContext context, Offset offset) {
-    _filterLayerHandler.layer = context.pushColorFilter(offset, colorFilter, (
-      ctx,
-      offset,
-    ) {
-      final overdraw = _blurRadius * .2;
-      for (final blob in _blobs) {
-        blob.paintBlob(ctx.canvas, this, overdraw, blobPaint);
+    final double margin = (_blurRadius * 0.2) * 2;
+    final bounds = (Offset.zero & size).inflate(margin);
+    if (!_shouldSnapshot || _blobsSnapshot == null) {
+      _filterLayerHandler.layer = context.pushColorFilter(offset, colorFilter, (
+        ctx,
+        offset,
+      ) {
+        for (final blob in _blobs) {
+          blob.paintBlob(ctx.canvas, this, margin, blobPaint);
+        }
+      }, oldLayer: _filterLayerHandler.layer);
+
+      if (_shouldSnapshot && _blobsSnapshot == null) {
+        final snapshotHelper = SnaphshotHelper(
+          _filterLayerHandler.layer!,
+          pixelRatio: _devicePixelRatio,
+        );
+        _blobsSnapshot = snapshotHelper.snapshotAsync(bounds, offset);
+        // Release the live layer, we'll use the snapshot from now on until invalidated.
+        Future.microtask(() {
+          _filterLayerHandler.layer = null;
+          markNeedsPaint();
+        });
       }
-    }, oldLayer: _filterLayerHandler.layer);
+    }
+
+    if (_shouldSnapshot && _blobsSnapshot != null) {
+      final Rect src = Rect.fromLTWH(0, 0, _blobsSnapshot!.width.toDouble(), _blobsSnapshot!.height.toDouble());
+      context.canvas.drawImageRect(_blobsSnapshot!, src, bounds, Paint());
+    }
   }
 
   @override

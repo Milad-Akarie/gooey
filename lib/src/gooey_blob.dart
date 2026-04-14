@@ -111,7 +111,7 @@ class RenderGooeyBlob extends RenderProxyBox {
   set textDirection(TextDirection? value) {
     if (_textDirection == value) return;
     _textDirection = value;
-    _bloobyShape = null;
+    _zone?.invalidateSnapshot();
     markNeedsPaint();
   }
 
@@ -125,6 +125,7 @@ class RenderGooeyBlob extends RenderProxyBox {
     super.performLayout();
     if (size == _lastSize) return;
     _lastSize = size;
+    _zone?.invalidateSnapshot();
     _bloobyShape = null;
   }
 
@@ -159,7 +160,7 @@ class RenderGooeyBlob extends RenderProxyBox {
   void paintBlob(
     Canvas canvas,
     RenderGooeyZone zone,
-    double overdraw,
+    double margin,
     Paint paint,
   ) {
     final childSize = size;
@@ -173,7 +174,8 @@ class RenderGooeyBlob extends RenderProxyBox {
     if (_color != null) {
       blobPaint = Paint()
         ..color = _color!
-        ..isAntiAlias = paint.isAntiAlias
+        ..isAntiAlias = false
+        ..shader = paint.shader
         ..maskFilter = paint.maskFilter;
     }
     if (_cutout) {
@@ -189,12 +191,12 @@ class RenderGooeyBlob extends RenderProxyBox {
     final shape = _shape;
 
     final oversize = Size(
-      childSize.width + overdraw * 2,
-      childSize.height + overdraw * 2,
+      childSize.width + margin,
+      childSize.height + margin,
     );
     switch (shape) {
       case _CircleBlob():
-        final radius = childSize.shortestSide / 2 + overdraw;
+        final radius = childSize.shortestSide / 2 + margin;
         canvas.drawCircle(blobCenter, radius, blobPaint);
       case _RoundedRectBlob():
         final borderRadius = shape.borderRadius.resolve(_textDirection);
