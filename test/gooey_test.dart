@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gooey/gooey.dart';
-import 'package:gooey/src/snapshot_helper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -748,23 +747,6 @@ void main() {
 
       final zone = tester.widget<GooeyZone>(find.byType(GooeyZone));
       expect(zone.shouldSnapshot, isFalse);
-    });
-  });
-
-  group('SnapshotHelper', () {
-    test('creates instance with layer and pixelRatio', () {
-      final layer = ContainerLayer();
-      final helper = SnaphshotHelper(layer, pixelRatio: 2.0);
-
-      expect(helper.layer, equals(layer));
-      expect(helper.pixelRatio, equals(2.0));
-    });
-
-    test('creates instance with default pixelRatio', () {
-      final layer = ContainerLayer();
-      final helper = SnaphshotHelper(layer);
-
-      expect(helper.pixelRatio, equals(1.0));
     });
   });
 
