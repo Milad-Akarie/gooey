@@ -1,6 +1,6 @@
 # Gooey
 
-[![Demo](https://raw.githubusercontent.com/USERNAME/REPO/main/example/demo.gif)](#)
+[![Demo](https://raw.githubusercontent.com/Milad-Akarie/gooey/main/demo/Goeey_demo.gif)](#)
 
 A layout-agnostic gooey/metaball effect widget for Flutter.
 
