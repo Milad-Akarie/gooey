@@ -1,5 +1,7 @@
 # Gooey
 
+[![Demo](https://raw.githubusercontent.com/USERNAME/REPO/main/example/demo.gif)](#)
+
 A layout-agnostic gooey/metaball effect widget for Flutter.
 
 ## What is Gooey?
@@ -10,17 +12,11 @@ Gooey creates a metaball-like visual effect by merging multiple widgets together
 
 ### Layout Agnostic
 
-Unlike other metaball implementations that require specific layouts or positioning, Gooey works with any Flutter widget arrangement. As long as your blobs are descendants of a `GooeyZone`, they will merge regardless of whether they're in a `Column`, `Row`, `Stack`, `Wrap`, or any other layout widget.
+Gooey works with any Flutter widget arrangement. As long as your blobs are descendants of a `GooeyZone`, they will merge regardless of whether they're in a `Column`, `Row`, `Stack`, `Wrap`, or any other layout widget.
 
 ## Important Limitations
 
 While the gooey effect is optimized for maximum performance, this package is **not** designed to create metaball backgrounds or full-surface gooey effects. For such effects (fluid backgrounds, shader-based metaballs, etc.), you should use a solution that works directly with fragment/pixel shaders.
-
-**GooeyZone is specifically designed for widget-level effects** such as:
-- Floating Action Buttons (FABs) that fan out sub-action blobs
-- Button groups with merged hover/pressed states
-- Menu items with cohesive dropdown blobs
-- Any discreteUI elements that benefit from organic, merged visuals
 
 ## Features
 
@@ -29,16 +25,7 @@ While the gooey effect is optimized for maximum performance, this package is **n
 - **Cutout support** — Create holes in the goo with `cutout: true`
 - **Custom colors/gradients** — Per-blob or zone-wide fill coloring
 - **Optimized rendering** — Uses Flutter's compositing layers for smooth performance
-- **Texture caching** — Optional snapshot mode for static blobs improves performance
-
-## Getting started
-
-Add the dependency:
-
-```yaml
-dependencies:
-  gooey: ^0.1.0
-```
+- **Texture caching** — Snapshot mode for static blobs improves performance
 
 ## Usage
 
@@ -95,16 +82,16 @@ Choose from built-in shapes or create custom blobs. The shape defines the backgr
 
 ```dart
 // Circle (default)
-GooeyBlob(shape: const BlobShape.circle(), child: ...)
+GooeyBlob(shape: .circle(), child: ...)
 
 // Rounded rectangle
-GooeyBlob(shape: BlobShape.rounded(BorderRadius.circular(8)), child: ...)
+GooeyBlob(shape: .rounded(BorderRadius.circular(8)), child: ...)
 
 // Super-ellipse (squircle)
-GooeyBlob(shape: BlobShape.superEllipse(BorderRadius.circular(16)), child: ...)
+GooeyBlob(shape: .superEllipse(BorderRadius.circular(16)), child: ...)
 
 // Random blobby shape
-GooeyBlob(shape: BlobShape.blobby(seed: 42), child: ...)
+GooeyBlob(shape: .blobby(seed: 42), child: ...)
 ```
 
 ### Gradients
@@ -143,23 +130,8 @@ When animating blobs, disable snapshot mode to render the gooey effect live each
 ```dart
 class _ExampleState extends State<Example> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    )..addListener(() {
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  
+  //...
 
   @override
   Widget build(BuildContext context) {

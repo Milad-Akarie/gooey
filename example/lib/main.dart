@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:gooey/gooey.dart';
+
 void main() {
- 
   runApp(const MyApp());
 }
 
@@ -13,12 +13,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      showPerformanceOverlay: true,
+      title: 'Gooey',
+      // showPerformanceOverlay: true,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigoAccent),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigoAccent,
+          brightness: Brightness.dark,
+        ),
+      ),
+      home: const MyHomePage(title: 'Gooey Blobs'),
     );
   }
 }
@@ -33,7 +39,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _AnimatedBlobs extends StatefulWidget {
-  const _AnimatedBlobs();
+  final int counter;
+  const _AnimatedBlobs(this.counter);
 
   @override
   State<_AnimatedBlobs> createState() => _AnimatedBlobsState();
@@ -90,23 +97,47 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
                     child: SizedBox.square(dimension: 50),
                   ),
                 ),
-                Transform.translate(
-                  offset: Offset(
-                    sin(t * 3 + 2) * 35 + sin(t * 3 + 1) * 25,
-                    cos(t * 3 + 1) * 20 + cos(t * 3 + 2) * 15,
+                if (widget.counter > 2)
+                  Transform.translate(
+                    offset: Offset(
+                      sin(t * 3 + 2) * 35 + sin(t * 3 + 1) * 25,
+                      cos(t * 3 + 1) * 20 + cos(t * 3 + 2) * 15,
+                    ),
+                    child: GooeyBlob(
+                      color: Colors.indigoAccent,
+                      child: SizedBox.square(dimension: 40),
+                    ),
                   ),
-                  child: GooeyBlob(
-                    color: Colors.indigoAccent,
-                    child: SizedBox.square(dimension: 40),
+                if (widget.counter > 3)
+                  Transform.translate(
+                    offset: Offset(sin(t * 4 + 3) * 25, cos(t * 4 + 2) * 35),
+                    child: GooeyBlob(
+                      color: Colors.blue,
+                      child: SizedBox.square(dimension: 35),
+                    ),
                   ),
-                ),
-                Transform.translate(
-                  offset: Offset(sin(t * 4 + 3) * 25, cos(t * 4 + 2) * 35),
-                  child: GooeyBlob(
-                    color: Colors.blue,
-                    child: SizedBox.square(dimension: 35),
+                if (widget.counter > 4)
+                  Transform.translate(
+                    offset: Offset(
+                      sin(t * 5 + 1) * 20 + sin(t * 5 + 2) * 20,
+                      cos(t * 5 + 2) * 25 + cos(t * 5 + 1) * 30,
+                    ),
+                    child: GooeyBlob(
+                      color: Colors.deepPurpleAccent,
+                      child: SizedBox.square(dimension: 30),
+                    ),
                   ),
-                ),
+                if (widget.counter > 5)
+                  Transform.translate(
+                    offset: Offset(
+                      sin(t * 6 + 1) * 20 + sin(t * 6 + 2) * 50,
+                      cos(t * 6 + 2) * 25 + cos(t * 6 + 1) * 60,
+                    ),
+                    child: GooeyBlob(
+                      color: Colors.deepPurpleAccent,
+                      child: SizedBox.square(dimension: 30),
+                    ),
+                  ),
               ],
             );
           },
@@ -117,14 +148,11 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 4;
   @override
   Widget build(BuildContext context) {
-    final textStyle = TextStyle(
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-      color: Colors.white,
-    );
     return Scaffold(
+      backgroundColor: Color(0xFF121416),
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
@@ -133,84 +161,63 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            GooeyZone.withGradient(
-              blurRadius: 10,
-              gradient: LinearGradient(
-                colors: [Colors.blueAccent, Colors.indigo],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              child: Row(
-                mainAxisAlignment: .center,
-                spacing: 8,
-                children: [
-                GooeyBlob(
-                  child: Padding(
-                    padding: const .all(20),
-                    child: Text('G', style: textStyle),
-                  ),
-                ),
-                Padding(
-                  padding: const .only(top: 12),
-                  child: GooeyBlob(
-                    child: Padding(
-                      padding: const .all(12.0),
-                      child: Text('o', style: textStyle),
-                    ),
-                  ),
-                ),
-                GooeyBlob(
-                  child: Padding( 
-                    padding: const .all(16.0),
-                    child: Text('O', style: textStyle),
-                  ),
-                ),
-                Padding(
-                  padding: const .only(bottom: 12),
-                  child: GooeyBlob(
-                    child: Padding(
-                      padding: const .all(12.0),
-                      child: Text('e', style: textStyle),
-                    ),
-                  ),
-                ),
-                GooeyBlob(
-                  child: Padding(
-                    padding: const .all(20.0),
-                    child: Text('y', style: textStyle),
-                  ),
-                ),
-            
-              ],)),
-
-            const _AnimatedBlobs(),
-            const SizedBox(height: 40),
+            _AnimatedBlobs(_counter),
+            const SizedBox(height: 48),
             Padding(
               padding: const EdgeInsets.all(2.0),
               child: GooeyZone(
                 color: Colors.indigo,
-                blurRadius: 12,
+                blurRadius: 14,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 8,
+                  spacing: 2,
                   children: [
                     GooeyBlob(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Icon(Icons.star, color: Colors.white),
+                      child: IconButton(
+                        style: IconButton.styleFrom(
+                          padding: const EdgeInsets.all(16),
+                          backgroundColor: Colors.indigoAccent,
+                        ),
+                        onPressed: _counter <= 2
+                            ? null
+                            : () {
+                                setState(() {
+                                  _counter--;
+                                });
+                              },
+                        icon: Icon(Icons.remove, color: Colors.white),
                       ),
                     ),
                     GooeyBlob(
-                      color: Colors.blueAccent,
+                      color: Colors.indigoAccent,
                       child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(Icons.star, color: Colors.white),
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          '$_counter',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontFamily: 'RobotoMono',
+                            fontWeight: FontWeight.bold,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
                       ),
                     ),
                     GooeyBlob(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Icon(Icons.star, color: Colors.white),
+                      child: IconButton(
+                        style: IconButton.styleFrom(
+                          padding: const EdgeInsets.all(16),
+                          backgroundColor: Colors.indigoAccent,
+                        ),
+                        onPressed: _counter >= 5
+                            ? null
+                            : () {
+                                setState(() {
+                                  _counter++;
+                                });
+                              },
+                        icon: Icon(Icons.add, color: Colors.white),
                       ),
                     ),
                   ],
