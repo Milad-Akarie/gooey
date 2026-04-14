@@ -1,0 +1,9 @@
+example/build/
+example/.dart_tool/
+example/android/.gradle/
+example/ios/Pods/
+example/ios/.symlinks/
+example/ios/Flutter/ephemeral/
+example/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+demo/
+build/

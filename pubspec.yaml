@@ -1,7 +1,7 @@
 name: gooey
 description: "A layout-agnostic gooey/metaball effect widget for Flutter. Makes nearby elements appear to merge together like liquid"
 version: 0.1.0
-homepage: https://github.com/example/gooey
+homepage: https://github.com/Milad-Akarie/gooey
 
 environment:
   sdk: ^3.11.4
