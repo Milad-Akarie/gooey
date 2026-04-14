@@ -33,7 +33,12 @@ class GooeyBlob extends SingleChildRenderObjectWidget {
 
   @override
   RenderGooeyBlob createRenderObject(BuildContext context) {
-    return RenderGooeyBlob(shape: shape, cutout: cutout, color: color);
+    return RenderGooeyBlob(
+      shape: shape,
+      cutout: cutout,
+      color: color,
+      textDirection: Directionality.maybeOf(context),
+    );
   }
 
   @override
@@ -41,7 +46,8 @@ class GooeyBlob extends SingleChildRenderObjectWidget {
     renderObject
       ..shape = shape
       ..cutout = cutout
-      ..color = color;
+      ..color = color
+      ..textDirection = Directionality.maybeOf(context);
   }
 
   @override
@@ -63,9 +69,11 @@ class RenderGooeyBlob extends RenderProxyBox {
     RenderBox? child,
     bool cutout = false,
     Color? color,
+    TextDirection? textDirection,
   }) : _shape = shape,
        _cutout = cutout,
        _color = color,
+       _textDirection = textDirection,
        super(child);
 
   BlobShape _shape;
@@ -95,6 +103,15 @@ class RenderGooeyBlob extends RenderProxyBox {
   set color(Color? value) {
     if (_color == value) return;
     _color = value;
+    markNeedsPaint();
+  }
+
+  TextDirection? _textDirection;
+
+  set textDirection(TextDirection? value) {
+    if (_textDirection == value) return;
+    _textDirection = value;
+    _bloobyShape = null;
     markNeedsPaint();
   }
 
@@ -180,7 +197,7 @@ class RenderGooeyBlob extends RenderProxyBox {
         final radius = childSize.shortestSide / 2 + overdraw;
         canvas.drawCircle(blobCenter, radius, blobPaint);
       case _RoundedRectBlob():
-        final borderRadius = shape.borderRadius.resolve(null);
+        final borderRadius = shape.borderRadius.resolve(_textDirection);
         final blobRect = Rect.fromCenter(
           center: blobCenter,
           width: oversize.width,
@@ -188,7 +205,7 @@ class RenderGooeyBlob extends RenderProxyBox {
         );
         canvas.drawRRect(borderRadius.toRRect(blobRect), blobPaint);
       case _SuperEllipseBlob():
-        final borderRadius = shape.borderRadius.resolve(null);
+        final borderRadius = shape.borderRadius.resolve(_textDirection);
         final blobRect = Rect.fromCenter(
           center: blobCenter,
           width: oversize.width,
