@@ -616,6 +616,366 @@ void main() {
     });
   });
 
+  group('GooeyZone sharpness', () {
+    testWidgets('default sharpness is 0.75', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        child: const SizedBox(),
+      );
+
+      expect(widget.sharpness, equals(0.75));
+    });
+
+    testWidgets('passes custom sharpness to constructor', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        sharpness: 0.4,
+        child: const SizedBox(),
+      );
+
+      expect(widget.sharpness, equals(0.4));
+    });
+
+    testWidgets('renders with sharpness 0.0', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            sharpness: 0.0,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+    });
+
+    testWidgets('renders with sharpness 1.0', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            sharpness: 1.0,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+    });
+  });
+
+  group('GooeyZone overpaintFactor', () {
+    testWidgets('default overpaintFactor is 0.2', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        child: const SizedBox(),
+      );
+
+      expect(widget.overpaintFactor, equals(0.2));
+    });
+
+    testWidgets('passes custom overpaintFactor to constructor', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        overpaintFactor: 0.5,
+        child: const SizedBox(),
+      );
+
+      expect(widget.overpaintFactor, equals(0.5));
+    });
+
+    testWidgets('renders with overpaintFactor 0.0', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            overpaintFactor: 0.0,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+    });
+
+    testWidgets('renders with overpaintFactor 1.0', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            overpaintFactor: 1.0,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+    });
+  });
+
+  group('GooeyZone blobOpacity', () {
+    testWidgets('default blobOpacity is 1.0', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        child: const SizedBox(),
+      );
+
+      expect(widget.blobOpacity, equals(1.0));
+    });
+
+    testWidgets('passes custom blobOpacity to constructor', (tester) async {
+      final widget = GooeyZone(
+        color: Colors.indigo,
+        blobOpacity: 0.5,
+        child: const SizedBox(),
+      );
+
+      expect(widget.blobOpacity, equals(0.5));
+    });
+
+    testWidgets('renders with blobOpacity 0.0', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            blobOpacity: 0.0,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+    });
+  });
+
+  group('GooeyZone.withGradient parameters', () {
+    testWidgets('default sharpness is 1.0', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        child: const SizedBox(),
+      );
+
+      expect(widget.sharpness, equals(1.0));
+    });
+
+    testWidgets('passes custom sharpness', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        sharpness: 0.5,
+        child: const SizedBox(),
+      );
+
+      expect(widget.sharpness, equals(0.5));
+    });
+
+    testWidgets('default threshold is 0.5', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        child: const SizedBox(),
+      );
+
+      expect(widget.threshold, equals(0.5));
+    });
+
+    testWidgets('passes custom threshold', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        threshold: 0.3,
+        child: const SizedBox(),
+      );
+
+      expect(widget.threshold, equals(0.3));
+    });
+
+    testWidgets('default blurRadius is 12.0', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        child: const SizedBox(),
+      );
+
+      expect(widget.blurRadius, equals(12.0));
+    });
+
+    testWidgets('passes custom blurRadius', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        blurRadius: 20.0,
+        child: const SizedBox(),
+      );
+
+      expect(widget.blurRadius, equals(20.0));
+    });
+
+    testWidgets('default shouldSnapshot is true', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        child: const SizedBox(),
+      );
+
+      expect(widget.shouldSnapshot, isTrue);
+    });
+
+    testWidgets('passes custom shouldSnapshot', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        shouldSnapshot: false,
+        child: const SizedBox(),
+      );
+
+      expect(widget.shouldSnapshot, isFalse);
+    });
+
+    testWidgets('default overpaintFactor is 0.2', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        child: const SizedBox(),
+      );
+
+      expect(widget.overpaintFactor, equals(0.2));
+    });
+
+    testWidgets('passes custom overpaintFactor', (tester) async {
+      final widget = GooeyZone.withGradient(
+        gradient: const LinearGradient(colors: [Colors.red]),
+        overpaintFactor: 0.3,
+        child: const SizedBox(),
+      );
+
+      expect(widget.overpaintFactor, equals(0.3));
+    });
+
+    testWidgets('renders with all custom parameters', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone.withGradient(
+            gradient: const LinearGradient(colors: [Colors.red, Colors.blue]),
+            sharpness: 0.6,
+            threshold: 0.4,
+            blurRadius: 15.0,
+            shouldSnapshot: false,
+            overpaintFactor: 0.3,
+            blobOpacity: 0.7,
+            child: GooeyBlob(
+              child: const SizedBox(width: 50, height: 50),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+      expect(find.byType(GooeyBlob), findsOneWidget);
+    });
+
+    testWidgets('renders with all default parameters', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone.withGradient(
+            gradient: const LinearGradient(colors: [Colors.red, Colors.blue]),
+            child: GooeyBlob(
+              child: const SizedBox(width: 50, height: 50),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+      expect(find.byType(GooeyBlob), findsOneWidget);
+    });
+  });
+
+  group('GooeyZone debugFillProperties sharpness and overpaintFactor', () {
+    testWidgets('adds sharpness to diagnostic properties', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            sharpness: 0.9,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      final element = tester.element(find.byType(GooeyZone));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'sharpness'), isTrue);
+    });
+
+    testWidgets('adds overpaintFactor to diagnostic properties', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            overpaintFactor: 0.4,
+            child: const SizedBox(),
+          ),
+        ),
+      );
+
+      final element = tester.element(find.byType(GooeyZone));
+      final diagnostics = DiagnosticPropertiesBuilder();
+      element.widget.debugFillProperties(diagnostics);
+
+      final properties = diagnostics.properties;
+      expect(properties.any((p) => p.name == 'overpaintFactor'), isTrue);
+    });
+  });
+
+  group('GooeyZone Integration with new parameters', () {
+    testWidgets('zone renders with all parameters combined', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone(
+            color: Colors.indigo,
+            blurRadius: 18.0,
+            threshold: 0.6,
+            sharpness: 0.8,
+            blobOpacity: 0.9,
+            shouldSnapshot: true,
+            overpaintFactor: 0.25,
+            child: Column(
+              children: [
+                GooeyBlob(child: const SizedBox(width: 30, height: 30)),
+                GooeyBlob(child: const SizedBox(width: 30, height: 30)),
+                GooeyBlob(child: const SizedBox(width: 30, height: 30)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+      expect(find.byType(GooeyBlob), findsNWidgets(3));
+    });
+
+    testWidgets('zone with gradient and all parameters', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: GooeyZone.withGradient(
+            gradient: const LinearGradient(
+              colors: [Colors.red, Colors.blue, Colors.green],
+            ),
+            blurRadius: 10.0,
+            threshold: 0.45,
+            sharpness: 0.55,
+            blobOpacity: 0.85,
+            shouldSnapshot: false,
+            overpaintFactor: 0.15,
+            child: GooeyBlob(
+              child: const SizedBox(width: 50, height: 50),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(GooeyZone), findsOneWidget);
+      expect(find.byType(GooeyBlob), findsOneWidget);
+    });
+  });
+
   group('BlobShape.blobby', () {
     test('blobby creates BlobShape instance', () {
       final shape = BlobShape.blobby();

@@ -29,10 +29,15 @@ class GooeyZone extends SingleChildRenderObjectWidget {
     required this.color,
     this.blurRadius = 12.0,
     this.threshold = 0.5,
+    this.sharpness = 0.75,
     required super.child,
     this.blobOpacity = 1.0,
     this.shouldSnapshot = true,
-  }) : gradient = null;
+    this.overpaintFactor = 0.2,
+  }) : assert(threshold >= 0.0 && threshold <= 1.0, 'threshold must be between 0.0 and 1.0'),
+       assert(sharpness >= 0.0 && sharpness <= 1.0, 'sharpness must be between 0.0 and 1.0'),
+       assert(blobOpacity >= 0.0 && blobOpacity <= 1.0, 'blobOpacity must be between 0.0 and 1.0'),
+       gradient = null;
 
   /// Creates a [GooeyZone] with a custom gradient fill for the blobs.
   const GooeyZone.withGradient({
@@ -41,9 +46,14 @@ class GooeyZone extends SingleChildRenderObjectWidget {
     this.blobOpacity = 1.0,
     this.blurRadius = 12.0,
     this.threshold = 0.5,
+    this.sharpness = 1.0,
     required super.child,
     this.shouldSnapshot = true,
-  }) : color = Colors.white;
+    this.overpaintFactor = 0.2,
+  }) : assert(threshold >= 0.0 && threshold <= 1.0, 'threshold must be between 0.0 and 1.0'),
+       assert(sharpness >= 0.0 && sharpness <= 1.0, 'sharpness must be between 0.0 and 1.0'),
+       assert(blobOpacity >= 0.0 && blobOpacity <= 1.0, 'blobOpacity must be between 0.0 and 1.0'),
+       color = Colors.white;
 
   /// Optional gradient to fill the blobs. If null, [color] is used as a solid fill.
   ///
@@ -69,6 +79,11 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   /// Defaults to 0.5.
   final double threshold;
 
+  /// Sharpness of the goo snap effect (0.0–1.0).
+  /// A factor that controls edge sharpness: 0.0 = softest (1.0), 1.0 = sharpest (50.0).
+  /// Defaults to 0.75
+  final double sharpness;
+
   /// Opacity applied to the blob layer only (not the child content).
   /// At 1.0 (default) no extra layer is pushed. At 0.0 blobs are skipped entirely.
   final double blobOpacity;
@@ -93,15 +108,24 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   /// caching and improve performance.
   final bool shouldSnapshot;
 
+  /// Extra paint margin for blobs, expressed as a multiplier of [blurRadius].
+  ///
+  /// This determines how much extra space around each blob is rendered before thresholding.
+  /// Higher values provide more margin to avoid clipping at widget boundaries.
+  /// Defaults to 0.2.
+  final double overpaintFactor;
+
   @override
   RenderGooeyZone createRenderObject(BuildContext context) {
     return RenderGooeyZone(
       color: color,
       blurRadius: blurRadius,
       threshold: threshold,
+      sharpness: sharpness,
       gradient: gradient,
       blobOpacity: blobOpacity,
       shouldSnapshot: shouldSnapshot,
+      overpaintFactor: overpaintFactor,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
     );
   }
@@ -112,8 +136,10 @@ class GooeyZone extends SingleChildRenderObjectWidget {
       ..color = color
       ..blurRadius = blurRadius
       ..threshold = threshold
+      ..sharpness = sharpness
       ..gradient = gradient
       ..shouldSnapshot = shouldSnapshot
+      ..overpaintFactor = overpaintFactor
       ..blobOpacity = blobOpacity
       ..devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
   }
@@ -124,7 +150,9 @@ class GooeyZone extends SingleChildRenderObjectWidget {
     properties.add(ColorProperty('color', color));
     properties.add(DoubleProperty('blurRadius', blurRadius));
     properties.add(DoubleProperty('threshold', threshold));
+    properties.add(DoubleProperty('sharpness', sharpness));
     properties.add(DoubleProperty('blobOpacity', blobOpacity));
+    properties.add(DoubleProperty('overpaintFactor', overpaintFactor));
   }
 }
 
@@ -135,8 +163,10 @@ class RenderGooeyZone extends RenderProxyBox {
     required Color color,
     required double blurRadius,
     required double threshold,
+    required double sharpness,
     required double blobOpacity,
     required bool shouldSnapshot,
+    required double overpaintFactor,
     required double devicePixelRatio,
     Gradient? gradient,
 
@@ -144,7 +174,9 @@ class RenderGooeyZone extends RenderProxyBox {
   }) : _color = color,
        _blurRadius = blurRadius,
        _threshold = threshold,
+       _sharpness = sharpness,
        _blobOpacity = blobOpacity,
+       _overpaintFactor = overpaintFactor,
        _gradient = gradient,
        _shouldSnapshot = shouldSnapshot,
        _devicePixelRatio = devicePixelRatio,
@@ -219,9 +251,19 @@ class RenderGooeyZone extends RenderProxyBox {
 
   double _threshold;
   set threshold(double value) {
+    assert(value >= 0.0 && value <= 1.0, 'threshold must be between 0.0 and 1.0');
     if (_threshold == value) return;
     _threshold = value;
     _filter = null; // Invalidate cache
+    markNeedsPaint();
+  }
+
+  double _sharpness;
+  set sharpness(double value) {
+    assert(value >= 0.0 && value <= 1.0, 'sharpness must be between 0.0 and 1.0');
+    if (_sharpness == value) return;
+    _sharpness = value;
+    _filter = null;
     markNeedsPaint();
   }
 
@@ -229,6 +271,15 @@ class RenderGooeyZone extends RenderProxyBox {
   set blobOpacity(double value) {
     if (_blobOpacity == value) return;
     _blobOpacity = value;
+    markNeedsPaint();
+  }
+
+  double _overpaintFactor;
+  set overpaintFactor(double value) {
+    if (_overpaintFactor == value) return;
+    _overpaintFactor = value;
+    _blobPaint = null;
+    _invalidateSnapshot();
     markNeedsPaint();
   }
 
@@ -248,6 +299,7 @@ class RenderGooeyZone extends RenderProxyBox {
   bool get alwaysNeedsCompositing => true;
 
   ui.Image? _blobsSnapshot;
+  Rect _lastSnapshotRect = Rect.zero;
 
   // The flag that toggles between "Texture Mode" and "Live Filter Mode"
   bool _shouldSnapshot = true;
@@ -301,8 +353,7 @@ class RenderGooeyZone extends RenderProxyBox {
   }
 
   void _paintBlobs(PaintingContext context, Offset offset) {
-    final double margin = (_blurRadius * 0.2) * 2;
-    final bounds = (Offset.zero & size).inflate(margin);
+    final double margin = (_blurRadius * _overpaintFactor) * 2;
     if (!_shouldSnapshot || _blobsSnapshot == null) {
       _filterLayerHandler.layer = context.pushColorFilter(offset, colorFilter, (
         ctx,
@@ -318,18 +369,22 @@ class RenderGooeyZone extends RenderProxyBox {
           _filterLayerHandler.layer!,
           pixelRatio: _devicePixelRatio,
         );
-        _blobsSnapshot = snapshotHelper.snapshotAsync(bounds, offset);
+        final extraMarging = _calculateExtraMargin();
+        _lastSnapshotRect = (Offset.zero & size).inflate(extraMarging).shift(offset);
+        _blobsSnapshot = snapshotHelper.snapshotAsync(_lastSnapshotRect, offset);
         // Release the live layer, we'll use the snapshot from now on until invalidated.
         Future.microtask(() {
           _filterLayerHandler.layer = null;
-          markNeedsPaint();
+          if (attached) {
+            markNeedsPaint();
+          }
         });
       }
     }
 
     if (_shouldSnapshot && _blobsSnapshot != null) {
       final Rect src = Rect.fromLTWH(0, 0, _blobsSnapshot!.width.toDouble(), _blobsSnapshot!.height.toDouble());
-      context.canvas.drawImageRect(_blobsSnapshot!, src, bounds, Paint());
+      context.canvas.drawImageRect(_blobsSnapshot!, src, _lastSnapshotRect, Paint());
     }
   }
 
@@ -353,21 +408,50 @@ class RenderGooeyZone extends RenderProxyBox {
     super.paint(context, offset);
   }
 
+  double _calculateExtraMargin() {
+    if (_blurRadius <= 0) return 0;
+
+    // 1. The Gaussian "Reach"
+    // Sigma is the mathematical 'spread' of your blur.
+    final double sigma = _blurRadius * 0.57735 + 0.5;
+
+    // 2. The Threshold Expansion
+    // We calculate how many pixels away the alpha hits our cutoff.
+    // Lower threshold = larger expansion.
+    final double safeThreshold = _threshold.clamp(0.001, 0.999);
+    final double thresholdPixels = sigma * math.sqrt(-2.0 * math.log(safeThreshold));
+
+    // 3. The User's "Overpaint" Safety Gutter
+    // We treat this as extra pixels based on the blur radius.
+    final double overpaintPixels = _blurRadius * _overpaintFactor;
+
+    // Total margin = The thresholded blur + the extra user padding.
+    return thresholdPixels + overpaintPixels;
+  }
+
   /// Lazily computes and caches the color filter used for thresholding the blurred blobs
   ColorFilter get colorFilter {
-    if (_filter != null) {
-      return _filter!;
-    }
-    final contrast = 50.0 + _threshold * 20.0;
-    final biasValue = -contrast * 127.5;
+    if (_filter != null) return _filter!;
+
+    // Map 0.0-1.0 threshold to a safe alpha range (0.01 to 0.99)
+    // Higher threshold = higher alpha required = smaller/later blobs
+    final double alphaCutoff = _threshold.clamp(0.01, 0.99);
+
+    // Sharpness should range from 1.0 (no change) to ~50.0 (razor sharp)
+    final double s = ui.lerpDouble(1.0, 50.0, _sharpness)!;
+
+    // The math: offset the contrast (s) by the alpha requirement
+    final double bias = -s * (255.0 * alphaCutoff);
+
     // dart format off
-    final filter = ui.ColorFilter.matrix(<double>[
-      1, 0, 0, 0, 0,
-      0, 1, 0, 0, 0,
-      0, 0, 1, 0, 0,
-      0, 0, 0, contrast, biasValue,
-    ]);
-    // dart format on
+  final filter = ui.ColorFilter.matrix(<double>[
+    1, 0, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, s, bias,
+  ]);
+  // dart format on
+
     return _filter = filter;
   }
 }

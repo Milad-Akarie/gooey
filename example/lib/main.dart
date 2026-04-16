@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Gooey',
-      // showPerformanceOverlay: true,
+      showPerformanceOverlay: true,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigoAccent),
       ),
@@ -72,6 +72,8 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
       height: 200,
       child: GooeyZone(
         color: Colors.indigo,
+        threshold: .3,
+        blurRadius: 8,
         shouldSnapshot: false,
         child: AnimatedBuilder(
           animation: _controller,
@@ -170,6 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 blurRadius: 14,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: .min,
                   spacing: 2,
                   children: [
                     GooeyBlob(

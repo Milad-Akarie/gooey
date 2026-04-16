@@ -62,16 +62,21 @@ GooeyZone(
 
 Control the gooey behavior with these parameters:
 
-- `blurRadius` — How far blobs merge (higher = wider merge distance)
-- `threshold` — Alpha cutoff for the snap effect (higher = sharper merge)
-- `blobOpacity` — Control blob layer opacity independently
+- `blurRadius` — How far blobs merge (higher = wider merge distance). Defaults to 12.0.
+- `threshold` — Alpha cutoff for the snap effect (0.0–1.0, higher = sharper merge). Defaults to 0.5.
+- `sharpness` — Edge sharpness factor (0.0–1.0, maps to 1.0–50.0 internally). Defaults to 1.0.
+- `overpaintFactor` — Extra paint margin for blobs as a multiplier of blurRadius. Defaults to 0.2.
+- `blobOpacity` — Control blob layer opacity independently (0.0–1.0). Defaults to 1.0.
+- `shouldSnapshot` — Enable texture caching for static blobs. Defaults to true.
 
 ```dart
 GooeyZone(
   color: Colors.indigo,
-  blurRadius: 16.0,  // Wider merge
-  threshold: 0.6,   // Sharper snap
-  blobOpacity: 0.8, // Slightly transparent goo
+  blurRadius: 16.0,     // Wider merge
+  threshold: 0.6,       // Sharper snap
+  sharpness: 0.5,       // Softer edges
+  overpaintFactor: 0.3, // More paint margin
+  blobOpacity: 0.8,     // Slightly transparent goo
   child: // ...
 )
 ```
