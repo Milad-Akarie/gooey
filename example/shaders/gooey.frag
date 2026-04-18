@@ -43,25 +43,35 @@ layout(location = 22) uniform vec4 blobParams8;
 // Fill type
 // ----------------------------
 
-vec4 getFill(vec2 p, float fillType, vec4 color, vec4 color2, vec4 color3, vec4 gradientParams) {
-    if (fillType < 0.5) {
+vec4 getFill(vec2 p, float fillCode, vec4 color, vec4 color2, vec4 color3, vec4 gradientParams) {
+    // 0 = solid
+    // 1 = linear, 2 colors
+    // 2 = linear, 3 colors
+    // 3 = radial, 2 colors
+    // 4 = radial, 3 colors
+
+    if (fillCode < 0.5) {
         return color;
-    } else if (fillType < 1.5) {
-        // Linear gradient with custom start/end alignments
+    }
+
+    bool isLinear = fillCode < 2.5;
+   bool twoColors = mod(fillCode, 2.0) > 0.5;
+
+    float t;
+    if (isLinear) {
         vec2 start = gradientParams.xy;
         vec2 end = gradientParams.zw;
-        float t = clamp(dot(p - start, end - start) / dot(end - start, end - start), 0.0, 1.0);
-        if (t < 0.5) {
-            return mix(color, color2, t * 2.0);
-        } else {
-            return mix(color2, color3, (t - 0.5) * 2.0);
-        }
+        vec2 dir = end - start;
+        t = clamp(dot(p - start, dir) / dot(dir, dir), 0.0, 1.0);
     } else {
-        // Radial gradient with focal point and radius
-        // Radial gradient
         vec2 center = gradientParams.xy;
         float radius = gradientParams.z;
-        float t = clamp(length(p - center) / radius, 0.0, 1.0);
+        t = clamp(length(p - center) / radius, 0.0, 1.0);
+    }
+
+    if (twoColors) {
+        return mix(color, color2, t);
+    } else {
         if (t < 0.5) {
             return mix(color, color2, t * 2.0);
         } else {

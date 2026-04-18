@@ -2,6 +2,17 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+enum FillType {
+  solid(0),
+  linear2(1),
+  linear3(2),
+  radial2(3),
+  radial3(4);
+
+  const FillType(this.value);
+  final int value;
+}
+
 class GooeyZoneShader extends SingleChildRenderObjectWidget {
   const GooeyZoneShader({
     super.key,
@@ -10,49 +21,49 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     required super.child,
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
-  }) : fillType = 0,
-       color2 = null,
-       color3 = null,
+  }) : fillType = FillType.solid,
+       secondColor = null,
+       thirdColor = null,
        begin = null,
        end = null,
        center = null,
        radius = null;
 
-  const GooeyZoneShader.linearGradient({
+const GooeyZoneShader.linearGradient({
     super.key,
     required this.gooiness,
     required this.color,
-    required Color this.color2,
-    this.color3,
+    required Color this.secondColor,
+    this.thirdColor,
     this.begin,
     this.end,
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
     required super.child,
-  }) : fillType = 1,
-       center = null,
-       radius = null;
+  })  : fillType = thirdColor != null ? FillType.linear3 : FillType.linear2,
+        center = null,
+        radius = null;
 
   const GooeyZoneShader.radialGradient({
     super.key,
     required this.gooiness,
     required this.color,
-    required Color this.color2,
-    this.color3,
+    required Color this.secondColor,
+    this.thirdColor,
     this.center,
     this.radius,
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
     required super.child,
-  }) : fillType = 2,
-       begin = null,
-       end = null;
+  })  : fillType = thirdColor != null ? FillType.radial3 : FillType.radial2,
+        begin = null,
+        end = null;
 
   final double gooiness;
   final Color color;
-  final int fillType;
-  final Color? color2;
-  final Color? color3;
+  final FillType fillType;
+  final Color? secondColor;
+  final Color? thirdColor;
   final AlignmentGeometry? begin;
   final AlignmentGeometry? end;
   final AlignmentGeometry? center;
@@ -66,8 +77,8 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
       gooiness: gooiness,
       color: color,
       fillType: fillType,
-      color2: color2,
-      color3: color3,
+      color2: secondColor,
+      color3: thirdColor,
       gradientStart: begin,
       gradientEnd: end,
       gradientFocal: center,
@@ -86,8 +97,8 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
       ..gooiness = gooiness
       ..color = color
       ..fillType = fillType
-      ..color2 = color2
-      ..color3 = color3
+      ..color2 = secondColor
+      ..color3 = thirdColor
       ..gradientStart = begin
       ..gradientEnd = end
       ..gradientFocal = center
@@ -144,7 +155,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
   RenderGooeyZoneShader({
     required double gooiness,
     required Color color,
-    int fillType = 0,
+    FillType fillType = FillType.solid,
     Color? color2,
     Color? color3,
     AlignmentGeometry? gradientStart,
@@ -160,7 +171,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
        _color3 = color3,
        _gradientStart = gradientStart,
        _gradientEnd = gradientEnd,
-       _gradientCenter = gradientFocal,
+       _gradientFocal = gradientFocal,
        _gradientRadius = gradientRadius,
        _borderWidth = borderWidth,
        _borderColor = borderColor {
@@ -186,8 +197,8 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  int _fillType;
-  set fillType(int value) {
+  FillType _fillType;
+  set fillType(FillType value) {
     if (_fillType == value) return;
     _fillType = value;
     markNeedsPaint();
@@ -221,10 +232,10 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  AlignmentGeometry? _gradientCenter;
+  AlignmentGeometry? _gradientFocal;
   set gradientFocal(AlignmentGeometry? value) {
-    if (_gradientCenter == value) return;
-    _gradientCenter = value;
+    if (_gradientFocal == value) return;
+    _gradientFocal = value;
     markNeedsPaint();
   }
 
@@ -297,7 +308,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     shader.setFloat(i++, goo);
     shader.setFloat(i++, blobCount.toDouble());
     shader.setFloat(i++, _borderWidth > 0 ? _borderWidth / w : 0.0);
-    shader.setFloat(i++, _fillType.toDouble());
+    shader.setFloat(i++, _fillType.value.toDouble());
 
     shader.setFloat(i++, _color.r);
     shader.setFloat(i++, _color.g);
@@ -323,18 +334,18 @@ class RenderGooeyZoneShader extends RenderProxyBox {
 
     // Gradient params
     final textDir = _textDirection ?? TextDirection.ltr;
-   if (_fillType == 1) {
+if (_fillType == FillType.linear2 || _fillType == FillType.linear3) {
       final start = _gradientStart?.resolve(textDir) ?? Alignment.centerLeft;
       final end = _gradientEnd?.resolve(textDir) ?? Alignment.centerRight;
       shader.setFloat(i++, (start.x + 1.0) * 0.5);
       shader.setFloat(i++, (start.y + 1.0) * 0.5);
       shader.setFloat(i++, (end.x + 1.0) * 0.5);
       shader.setFloat(i++, (end.y + 1.0) * 0.5);
-    } else if (_fillType == 2) {
-      final center = _gradientCenter?.resolve(textDir) ?? Alignment.center;
+    } else if (_fillType == FillType.radial2 || _fillType == FillType.radial3) {
+      final focal = _gradientFocal?.resolve(textDir) ?? Alignment.center;
       final radius = _gradientRadius ?? 0.5;
-      shader.setFloat(i++, (center.x + 1.0) * 0.5);
-      shader.setFloat(i++, (center.y + 1.0) * 0.5);
+      shader.setFloat(i++, (focal.x + 1.0) * 0.5);
+      shader.setFloat(i++, (focal.y + 1.0) * 0.5);
       shader.setFloat(i++, radius);
       shader.setFloat(i++, 0.0);
     } else {
@@ -346,6 +357,16 @@ class RenderGooeyZoneShader extends RenderProxyBox {
 
     const kBlobOffset = 28;
     final kBlobParamsOffset = 60;
+
+    shader.setFloat(i++, offset.dx);
+    shader.setFloat(i++, offset.dy);
+    shader.setFloat(i++, w);
+    shader.setFloat(i++, h);
+
+    shader.setFloat(i++, goo);
+    shader.setFloat(i++, blobCount.toDouble());
+    shader.setFloat(i++, _borderWidth > 0 ? _borderWidth / w : 0.0);
+    shader.setFloat(i++, _fillType.value.toDouble());
 
     final blobs = _blobs.where((b) => b.hasSize && b.size != Size.zero);
     for (int b = 0; b < maxBlobCount; b++) {

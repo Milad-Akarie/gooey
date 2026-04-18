@@ -28,28 +28,30 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: Scaffold(
-        // body: Center(child: _AnimatedBlobs(5)),
-        body: Center(
-          child: GooeyZoneShader.linearGradient(
-            gooiness: 30,
-            color: Colors.indigoAccent,
-            color2: Colors.red,
-            color3: Colors.green,
-            child: Column(
-              mainAxisSize: .min,
-              mainAxisAlignment: .center,
-              crossAxisAlignment: .center,
-              spacing: 8,
-              children: [
-                GooeyBlobShader(child: SizedBox(width: 300, height: 300)),
-                // GooeyBlobShader(
-                //   shape: BlobShapeShader.rounded(BorderRadius.circular(50)),
-                //   child: SizedBox(width: 60, height: 60),
-                // ),
-              ],
-            ),
-          ),
-        ),
+        body: Center(child: _AnimatedBlobs(5)),
+        // body: Center(
+        //   child: GooeyZoneShader.radialGradient(
+        //     gooiness: 30,
+        //     color: Colors.indigoAccent,
+        //     secondColor: Colors.red,
+        //     thirdColor: Colors.green,
+        //     radius: .2,
+        //     child: Column(
+        //       mainAxisSize: .min,
+        //       mainAxisAlignment: .center,
+        //       crossAxisAlignment: .center,
+        //       spacing: 8,
+        //       children: [
+        //         GooeyBlobShader(child: SizedBox(width: 300, height: 300)),
+              
+        //         // GooeyBlobShader(
+        //         //   shape: BlobShapeShader.rounded(BorderRadius.circular(50)),
+        //         //   child: SizedBox(width: 60, height: 60),
+        //         // ),
+        //       ],
+        //     ),
+        //   ),
+        // ),
       ),
     );
   }
@@ -97,13 +99,13 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
       width: 200,
       height: 200,
       child: GooeyZoneShader.radialGradient(
-        color: Colors.black,
-        color2: Colors.indigoAccent,
+        color: Colors.blue,
+        secondColor: Colors.black,
         center: Alignment.center,
-        radius: .5,
-        borderWidth: 2,
-        // borderColor: Colors.deepPurple,
-        gooiness: 30,
+        radius: .9,
+        borderWidth: 1,
+        borderColor: Colors.deepPurple,
+        gooiness: 50,
         // threshold: .3,
         // blurRadius: 8,
         // shouldSnapshot: false,
