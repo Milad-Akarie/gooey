@@ -38,8 +38,12 @@ uniform float blobType6;
 uniform float blobType7;
 uniform float blobType8;
 
-// Fill color (offset 60)
+// Fill color (offset 78)
 uniform vec4 uColor;
+
+// Border width and color (offset 82)
+uniform float uBorderWidth;
+uniform vec4 uBorderColor;
 
 // ----------------------------
 // Distance functions
@@ -132,12 +136,16 @@ void main() {
     d = smoothUnion(d, d7, uGooiness);
     d = smoothUnion(d, d8, uGooiness);
 
-    // Anti-aliasing factor
     float aa = fwidth(d);
 
-    // Create mask with smoothstep for anti-aliasing
-    float alpha = smoothstep(aa, -aa, d);
+    float outer = smoothstep(aa, -aa, d);
+    float inner = smoothstep(aa, -aa, d + uBorderWidth);
 
-    // Use uColor for fill
-    fragColor = vec4(uColor.rgb * alpha, alpha * uColor.a);
+    float borderMask = outer * (1.0 - inner);
+    float fillMask   = inner;
+
+    vec4 fill   = vec4(uColor.rgb, uColor.a) * fillMask;
+    vec4 border = vec4(uBorderColor.rgb, uBorderColor.a) * borderMask;
+
+    fragColor = fill + border;
 }

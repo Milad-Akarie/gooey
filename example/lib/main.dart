@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: Scaffold(
-        body: Center(child: _AnimatedBlobs(5)),
+        body: Center(child: _AnimatedBlobs(8)),
         // body: Center(
         //   child: GooeyZoneShader(
         //     gooiness: 30,
@@ -97,7 +97,9 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
       width: 200,
       height: 200,
       child: GooeyZoneShader(
-        color: Colors.indigo,
+        color: Colors.black,
+        borderWidth: 2,
+        borderColor: Colors.purple,
         gooiness: 30,
         // threshold: .3,
         // blurRadius: 8,
@@ -163,6 +165,30 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
                     offset: Offset(
                       sin(t * 6 + 1) * 20 + sin(t * 6 + 2) * 50,
                       cos(t * 6 + 2) * 25 + cos(t * 6 + 1) * 60,
+                    ),
+                    child: GooeyBlobShader(
+                      // color: Colors.deepPurpleAccent,
+                      child: SizedBox.square(dimension: 30),
+                    ),
+                  ),
+
+                  if (widget.counter > 6)
+                  Transform.translate(
+                    offset: Offset(
+                      sin(t * 7 + 1) * 20 + sin(t * 7 + 2) * 50,
+                      cos(t * 7 + 2) * 25 + cos(t * 7 + 1) * 60,
+                    ),
+                    child: GooeyBlobShader(
+                      // color: Colors.deepPurpleAccent,
+                      child: SizedBox.square(dimension: 30),
+                    ),
+                  ),
+
+                  if (widget.counter > 7)
+                  Transform.translate(
+                    offset: Offset(
+                      sin(t * 8 + 1) * 20 + sin(t * 8 + 2) * 50,
+                      cos(t * 8 + 2) * 25 + cos(t * 8 + 1) * 60,
                     ),
                     child: GooeyBlobShader(
                       // color: Colors.deepPurpleAccent,

@@ -8,14 +8,23 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     required this.gooiness,
     required this.color,
     required super.child,
+    this.borderWidth = 0.0,
+    this.borderColor = Colors.transparent,
   });
 
   final double gooiness;
   final Color color;
+  final double borderWidth;
+  final Color borderColor;
 
   @override
   RenderGooeyZoneShader createRenderObject(BuildContext context) {
-    return RenderGooeyZoneShader(gooiness: gooiness, color: color);
+    return RenderGooeyZoneShader(
+      gooiness: gooiness,
+      color: color,
+      borderWidth: borderWidth,
+      borderColor: borderColor,
+    );
   }
 
   @override
@@ -26,6 +35,8 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     renderObject
       ..gooiness = gooiness
       ..color = color
+      ..borderWidth = borderWidth
+      ..borderColor = borderColor
       ..textDirection = Directionality.maybeOf(context);
   }
 }
@@ -73,9 +84,15 @@ class _RoundedRectBlobShader extends BlobShapeShader {
 class RenderGooeyZoneShader extends RenderProxyBox {
   static const int maxBlobCount = 8;
 
-  RenderGooeyZoneShader({required double gooiness, required Color color})
-    : _gooiness = gooiness,
-      _color = color {
+  RenderGooeyZoneShader({
+    required double gooiness,
+    required Color color,
+    required double borderWidth,
+    required Color borderColor,
+  }) : _gooiness = gooiness,
+       _color = color,
+       _borderWidth = borderWidth,
+       _borderColor = borderColor {
     _loadProgram();
   }
 
@@ -95,6 +112,20 @@ class RenderGooeyZoneShader extends RenderProxyBox {
   set color(Color value) {
     if (_color == value) return;
     _color = value;
+    markNeedsPaint();
+  }
+
+  double _borderWidth;
+  set borderWidth(double value) {
+    if (_borderWidth == value) return;
+    _borderWidth = value;
+    markNeedsPaint();
+  }
+
+  Color _borderColor;
+  set borderColor(Color value) {
+    if (_borderColor == value) return;
+    _borderColor = value;
     markNeedsPaint();
   }
 
@@ -150,6 +181,8 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     final kCornerRadiusOffset = kBlobOffset + maxBlobCount * 4;
     final kTypeOffset = kCornerRadiusOffset + maxBlobCount * 4;
     final kColorOffset = kTypeOffset + maxBlobCount;
+    final kBorderWidthOffset = kColorOffset + 4;
+    final kBorderColorOffset = kBorderWidthOffset + 1;
 
     for (int b = 0; b < maxBlobCount; b++) {
       final int dataIdx = kBlobOffset + b * 4;
@@ -214,7 +247,16 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     shader.setFloat(kColorOffset + 2, _color.b);
     shader.setFloat(kColorOffset + 3, _color.a);
 
-    context.canvas.drawRect((offset & size), Paint()..shader = shader);
+    shader.setFloat(
+      kBorderWidthOffset,
+      _borderWidth > 0 ? _borderWidth / w : 0.0,
+    );
+    shader.setFloat(kBorderColorOffset + 0, _borderColor.r);
+    shader.setFloat(kBorderColorOffset + 1, _borderColor.g);
+    shader.setFloat(kBorderColorOffset + 2, _borderColor.b);
+    shader.setFloat(kBorderColorOffset + 3, _borderColor.a);
+
+    context.canvas.drawRect((offset & size).inflate(_borderWidth * 2), Paint()..shader = shader);
     super.paint(context, offset);
   }
 }
