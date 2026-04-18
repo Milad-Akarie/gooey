@@ -170,8 +170,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     int i = 0;
 
     const kBlobOffset = 16;
-    final kCornerRadiusOffset = 48;
-    final kTypeOffset = 80;
+    final kBlobParamsOffset = 48;
 
     shader.setFloat(i++, offset.dx);
     shader.setFloat(i++, offset.dy);
@@ -193,13 +192,13 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     shader.setFloat(i++, _borderColor.b);
     shader.setFloat(i++, _borderColor.a);
 
+    final blobs = _blobs.where((b) => b.hasSize && b.size != Size.zero);
     for (int b = 0; b < maxBlobCount; b++) {
       final int dataIdx = kBlobOffset + b * 4;
-      final int cornerIdx = kCornerRadiusOffset + b * 4;
-      final int typeIdx = kTypeOffset + b;
+      final int paramsIdx = kBlobParamsOffset + b * 4;
 
-      if (b < _blobs.length) {
-        final blob = _blobs[b];
+      if (b < blobs.length) {
+        final blob = blobs.elementAt(b);
         final blobOffset = blob.getTransformTo(this);
         final blobRect = MatrixUtils.transformRect(
           blobOffset,
@@ -213,7 +212,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
         final shape = blob.shape;
         double hw;
         double hh;
-        BorderRadius br = BorderRadius.zero;
+        double borderRadius = 0.0;
         double type = 0.0;
         if (shape is _CircleBlobShader) {
           final radius = blobSize.shortestSide * 0.5;
@@ -222,7 +221,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
         } else if (shape is _RoundedRectBlobShader) {
           hw = blobSize.width * 0.5 / w;
           hh = blobSize.height * 0.5 / w;
-          br = shape.borderRadius.resolve(_textDirection);
+          borderRadius = shape.borderRadius.topLeft.x / w;
           type = 1.0;
         } else {
           hw = blobSize.width * 0.5 / w;
@@ -233,26 +232,24 @@ class RenderGooeyZoneShader extends RenderProxyBox {
         shader.setFloat(dataIdx + 2, hw);
         shader.setFloat(dataIdx + 3, hh);
 
-        shader.setFloat(cornerIdx + 0, br.topLeft.x / w);
-        shader.setFloat(cornerIdx + 1, br.topRight.x / w);
-        shader.setFloat(cornerIdx + 2, br.bottomRight.x / w);
-        shader.setFloat(cornerIdx + 3, br.bottomLeft.x / w);
-        shader.setFloat(typeIdx, type);
+        shader.setFloat(paramsIdx + 0, borderRadius);
+        shader.setFloat(paramsIdx + 1, type);
+        shader.setFloat(paramsIdx + 2, 0.0); // unused
+        shader.setFloat(paramsIdx + 3, 0.0); // unused
       } else {
         shader.setFloat(dataIdx + 0, 0.0);
         shader.setFloat(dataIdx + 1, 0.0);
         shader.setFloat(dataIdx + 2, 0.0);
         shader.setFloat(dataIdx + 3, 0.0);
-        shader.setFloat(cornerIdx + 0, 0.0);
-        shader.setFloat(cornerIdx + 1, 0.0);
-        shader.setFloat(cornerIdx + 2, 0.0);
-        shader.setFloat(cornerIdx + 3, 0.0);
-        shader.setFloat(typeIdx, 0.0);
+        shader.setFloat(paramsIdx + 0, 0.0);
+        shader.setFloat(paramsIdx + 1, 0.0);
+        shader.setFloat(paramsIdx + 2, 0.0);
+        shader.setFloat(paramsIdx + 3, 0.0);
       }
     }
 
     context.canvas.drawRect(
-      (offset & size).inflate(_borderWidth * 2),
+      (offset & size).inflate((_borderWidth * 2) + 4),
       Paint()..shader = shader,
     );
     super.paint(context, offset);

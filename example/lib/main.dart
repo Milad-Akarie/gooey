@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: Scaffold(
-        // body: Center(child: _AnimatedBlobs(8)),
+        // body: Center(child: _AnimatedBlobs(5)),
         body: Center(
           child: GooeyZoneShader(
             gooiness: 30,
@@ -43,8 +43,8 @@ class MyApp extends StatelessWidget {
                   child: SizedBox(width: 300, height: 200),
                 ),
                 GooeyBlobShader(
-                  shape: BlobShapeShader.rounded(BorderRadius.circular(30)),
-                  child: SizedBox(width: 50, height: 50),
+                  shape: BlobShapeShader.rounded(BorderRadius.circular(50)),
+                  child: SizedBox(width: 60, height: 60),
                 ),
               ],
             ),
@@ -98,8 +98,8 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
       height: 200,
       child: GooeyZoneShader(
         color: Colors.black,
-        borderWidth: 0,
-        borderColor: Colors.green,
+        borderWidth: 2,
+        borderColor: Colors.deepPurple,
         gooiness: 30,
         // threshold: .3,
         // blurRadius: 8,

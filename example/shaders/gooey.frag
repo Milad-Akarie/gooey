@@ -24,25 +24,15 @@ layout(location = 9) uniform vec4 blob6;
 layout(location = 10) uniform vec4 blob7;
 layout(location = 11) uniform vec4 blob8;
 
-// Per blob corner radii: (topLeft, topRight, bottomRight, bottomLeft)
-layout(location = 12) uniform vec4 blobCornerRadius1;
-layout(location = 13) uniform vec4 blobCornerRadius2;
-layout(location = 14) uniform vec4 blobCornerRadius3;
-layout(location = 15) uniform vec4 blobCornerRadius4;
-layout(location = 16) uniform vec4 blobCornerRadius5;
-layout(location = 17) uniform vec4 blobCornerRadius6;
-layout(location = 18) uniform vec4 blobCornerRadius7;
-layout(location = 19) uniform vec4 blobCornerRadius8;
-
-// 0.0 = circle, 1.0 = rounded rect, 2.0 = superellipse
-layout(location = 20) uniform float blobType1;
-layout(location = 21) uniform float blobType2;
-layout(location = 22) uniform float blobType3;
-layout(location = 23) uniform float blobType4;
-layout(location = 24) uniform float blobType5;
-layout(location = 25) uniform float blobType6;
-layout(location = 26) uniform float blobType7;
-layout(location = 27) uniform float blobType8;
+// Per blob: x: borderRadius, y: type, z: unused, w: unused
+layout(location = 12) uniform vec4 blobParams1;
+layout(location = 13) uniform vec4 blobParams2;
+layout(location = 14) uniform vec4 blobParams3;
+layout(location = 15) uniform vec4 blobParams4;
+layout(location = 16) uniform vec4 blobParams5;
+layout(location = 17) uniform vec4 blobParams6;
+layout(location = 18) uniform vec4 blobParams7;
+layout(location = 19) uniform vec4 blobParams8;
 
 // ----------------------------
 // Distance functions
@@ -51,22 +41,15 @@ layout(location = 27) uniform float blobType8;
 float sdCircle(vec2 p, vec2 c, float r) {
     return length(p - c) - r;
 }
-
-float sdRoundRect(vec2 p, vec2 c, vec2 b, vec4 cr) {
+float sdRoundRect(vec2 p, vec2 c, vec2 b, float r) {
     vec2 d = p - c;
-    float r = d.x < 0.0
-        ? (d.y < 0.0 ? cr.x : cr.w)
-        : (d.y < 0.0 ? cr.y : cr.z);
-    r = min(r, min(b.x, b.y)); // clamp r to fit within the shape
+    r = min(r, min(b.x, b.y));
     vec2 q = abs(d) - (b - r);
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
 
-float sdRSuperellipse(vec2 p, vec2 c, vec2 b, vec4 cr) {
+float sdRSuperellipse(vec2 p, vec2 c, vec2 b, float r) {
     vec2 d = p - c;
-    
-    // Determine corner radius based on quadrant
-    float r = (d.x < 0.0) ? (d.y < 0.0 ? cr.x : cr.w) : (d.y < 0.0 ? cr.y : cr.z);
     r = min(r, min(b.x, b.y));
 
     if (r < 0.0001) {
@@ -77,12 +60,11 @@ float sdRSuperellipse(vec2 p, vec2 c, vec2 b, vec4 cr) {
     float maxR = min(b.x, b.y);
     float t = clamp(r / maxR, 0.0, 1.0);
     float n = mix(8.0, 2.0, t);
-    
-    // You were missing the actual math return here!
-    // Standard superellipse distance approximation:
+
     vec2 q = abs(d) - (b - r);
-    return pow(pow(max(q.x, 0.0), n) + pow(max(q.y, 0.0), n), 1.0/n) - r;
+    return pow(pow(max(q.x, 0.0), n) + pow(max(q.y, 0.0), n), 1.0 / n) - r;
 }
+
 // ----------------------------
 // Smooth union
 // ----------------------------
@@ -96,20 +78,18 @@ float smoothUnion(float d1, float d2, float k) {
 // Blob evaluation
 // ----------------------------
 
-float evalBlob(vec2 p, vec4 b, vec4 cornerRadius, float type) {
+float evalBlob(vec2 p, vec4 b, vec4 params) {
     vec2 c = b.xy;
+    float type = params.y;
+    float borderRadius = params.x;
     if (type < 0.5) {
         return sdCircle(p, c, b.z);
     } else if (type < 1.5) {
-        return sdRoundRect(p, c, b.zw, cornerRadius);
+        return sdRoundRect(p, c, b.zw, borderRadius);
     } else {
-        return sdRSuperellipse(p, c, b.zw, cornerRadius);
+        return sdRSuperellipse(p, c, b.zw, borderRadius);
     }
 }
-
-// ----------------------------
-// Main
-// ----------------------------
 
 layout(location = 0) out vec4 fragColor;
 
@@ -125,17 +105,17 @@ void main() {
 
     // 2. Initialize d with the first blob to avoid smoothUnion with "INACTIVE"
     // We assume uParams.y is at least 1.0
-    float d = evalBlob(p, blob1, blobCornerRadius1, blobType1);
+    float d = evalBlob(p, blob1, blobParams1);
      
     // 3. Conditional accumulation
     // Using an unrolled loop style that allows the compiler to optimize
-    if (uParams.y >= 2.0) d = smoothUnion(d, evalBlob(p, blob2, blobCornerRadius2, blobType2), uParams.x);
-    if (uParams.y >= 3.0) d = smoothUnion(d, evalBlob(p, blob3, blobCornerRadius3, blobType3), uParams.x);
-    if (uParams.y >= 4.0) d = smoothUnion(d, evalBlob(p, blob4, blobCornerRadius4, blobType4), uParams.x);
-    if (uParams.y >= 5.0) d = smoothUnion(d, evalBlob(p, blob5, blobCornerRadius5, blobType5), uParams.x);
-    if (uParams.y >= 6.0) d = smoothUnion(d, evalBlob(p, blob6, blobCornerRadius6, blobType6), uParams.x);
-    if (uParams.y >= 7.0) d = smoothUnion(d, evalBlob(p, blob7, blobCornerRadius7, blobType7), uParams.x);
-    if (uParams.y >= 8.0) d = smoothUnion(d, evalBlob(p, blob8, blobCornerRadius8, blobType8), uParams.x);
+    if (uParams.y >= 2.0) d = smoothUnion(d, evalBlob(p, blob2, blobParams2), uParams.x);
+    if (uParams.y >= 3.0) d = smoothUnion(d, evalBlob(p, blob3, blobParams3), uParams.x);
+    if (uParams.y >= 4.0) d = smoothUnion(d, evalBlob(p, blob4, blobParams4), uParams.x);
+    if (uParams.y >= 5.0) d = smoothUnion(d, evalBlob(p, blob5, blobParams5), uParams.x);
+    if (uParams.y >= 6.0) d = smoothUnion(d, evalBlob(p, blob6, blobParams6), uParams.x);
+    if (uParams.y >= 7.0) d = smoothUnion(d, evalBlob(p, blob7, blobParams7), uParams.x);
+    if (uParams.y >= 8.0) d = smoothUnion(d, evalBlob(p, blob8, blobParams8), uParams.x);
 
     float aa = 0.001;
     // Combine smoothsteps into a single calculation area
