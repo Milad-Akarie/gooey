@@ -4,46 +4,46 @@
 precision highp float;
 
 // x, y, width, height
-uniform vec4 uBounds; 
-uniform float uGooiness;
-uniform float uBlobCount;
+layout(location = 0) uniform vec4 uBounds; 
+layout(location = 1) uniform float uGooiness;
+layout(location = 2) uniform float uBlobCount;
 
 // Per blob: (cx, cy, half_w, half_w)
-uniform vec4 blob1;
-uniform vec4 blob2;
-uniform vec4 blob3;
-uniform vec4 blob4;
-uniform vec4 blob5;
-uniform vec4 blob6;
-uniform vec4 blob7;
-uniform vec4 blob8;
+layout(location = 3) uniform vec4 blob1;
+layout(location = 4) uniform vec4 blob2;
+layout(location = 5) uniform vec4 blob3;
+layout(location = 6) uniform vec4 blob4;
+layout(location = 7) uniform vec4 blob5;
+layout(location = 8) uniform vec4 blob6;
+layout(location = 9) uniform vec4 blob7;
+layout(location = 10) uniform vec4 blob8;
 
 // Per blob corner radii: (topLeft, topRight, bottomRight, bottomLeft)
-uniform vec4 blobCornerRadius1;
-uniform vec4 blobCornerRadius2;
-uniform vec4 blobCornerRadius3;
-uniform vec4 blobCornerRadius4;
-uniform vec4 blobCornerRadius5;
-uniform vec4 blobCornerRadius6;
-uniform vec4 blobCornerRadius7;
-uniform vec4 blobCornerRadius8;
+layout(location = 11) uniform vec4 blobCornerRadius1;
+layout(location = 12) uniform vec4 blobCornerRadius2;
+layout(location = 13) uniform vec4 blobCornerRadius3;
+layout(location = 14) uniform vec4 blobCornerRadius4;
+layout(location = 15) uniform vec4 blobCornerRadius5;
+layout(location = 16) uniform vec4 blobCornerRadius6;
+layout(location = 17) uniform vec4 blobCornerRadius7;
+layout(location = 18) uniform vec4 blobCornerRadius8;
 
 // 0.0 = circle, 1.0 = rounded rect, 2.0 = superellipse
-uniform float blobType1;
-uniform float blobType2;
-uniform float blobType3;
-uniform float blobType4;
-uniform float blobType5;
-uniform float blobType6;
-uniform float blobType7;
-uniform float blobType8;
+layout(location = 19) uniform float blobType1;
+layout(location = 20) uniform float blobType2;
+layout(location = 21) uniform float blobType3;
+layout(location = 22) uniform float blobType4;
+layout(location = 23) uniform float blobType5;
+layout(location = 24) uniform float blobType6;
+layout(location = 25) uniform float blobType7;
+layout(location = 26) uniform float blobType8;
 
 // Fill color (offset 78)
-uniform vec4 uColor;
+layout(location = 27) uniform vec4 uColor;
 
 // Border width and color (offset 82)
-uniform float uBorderWidth;
-uniform vec4 uBorderColor;
+layout(location = 28) uniform float uBorderWidth;
+layout(location = 29) uniform vec4 uBorderColor;
 
 // ----------------------------
 // Distance functions
@@ -111,7 +111,7 @@ float evalBlob(vec2 p, vec4 b, vec4 cornerRadius, float type) {
 // Main
 // ----------------------------
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 void main() {
    vec2 p = (FlutterFragCoord().xy - uBounds.xy) / uBounds.z;

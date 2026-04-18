@@ -28,28 +28,28 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: Scaffold(
-        body: Center(child: _AnimatedBlobs(8)),
-        // body: Center(
-        //   child: GooeyZoneShader(
-        //     gooiness: 30,
-        //     color: Colors.indigoAccent,
-        //     child: Column(
-        //       mainAxisSize: .min,
-        //       mainAxisAlignment: .center,
-        //       crossAxisAlignment: .center,
-        //       spacing: 8,
-        //       children: [
-        //         GooeyBlobShader(
-        //           child: SizedBox(width: 300, height: 200),
-        //         ),
-        //         GooeyBlobShader(
-        //           shape: BlobShapeShader.rounded(BorderRadius.circular(30)),
-        //           child: SizedBox(width: 50, height: 50),
-        //         ),
-        //       ],
-        //     ),
-        //   ),
-        // ),
+        // body: Center(child: _AnimatedBlobs(8)),
+        body: Center(
+          child: GooeyZoneShader(
+            gooiness: 30,
+            color: Colors.indigoAccent,
+            child: Column(
+              mainAxisSize: .min,
+              mainAxisAlignment: .center,
+              crossAxisAlignment: .center,
+              spacing: 8,
+              children: [
+                GooeyBlobShader(
+                  child: SizedBox(width: 300, height: 200),
+                ),
+                GooeyBlobShader(
+                  shape: BlobShapeShader.rounded(BorderRadius.circular(30)),
+                  child: SizedBox(width: 50, height: 50),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
