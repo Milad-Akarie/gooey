@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gooey/gooey.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
-         
+
 void main() {
   runApp(const MyApp());
 }
@@ -28,28 +28,29 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: Scaffold(
-        // body: Center(child: _AnimatedBlobs(5)),
-        body: Center(
-          child: GooeyZoneShader(
-            gooiness: 30,
-            color: Colors.indigoAccent,
-            child: Column(
-              mainAxisSize: .min,
-              mainAxisAlignment: .center,
-              crossAxisAlignment: .center,
-              spacing: 8,
-              children: [
-                GooeyBlobShader(
-                  child: SizedBox(width: 300, height: 200),
-                ),
-                GooeyBlobShader(
-                  shape: BlobShapeShader.rounded(BorderRadius.circular(50)),
-                  child: SizedBox(width: 60, height: 60),
-                ),
-              ],
-            ),
-          ),
-        ),
+        body: Center(child: _AnimatedBlobs(5)),
+        // body: Center(
+        //   child: GooeyZoneShader.linearGradient(
+        //     gooiness: 30,
+        //     color: Colors.indigoAccent,
+        //     color2: Colors.purple,
+        //     color3: Colors.green,
+        //     borderColor: Colors.black,
+        //     child: Column(
+        //       mainAxisSize: .min,
+        //       mainAxisAlignment: .center,
+        //       crossAxisAlignment: .center,
+        //       spacing: 8,
+        //       children: [
+        //         GooeyBlobShader(child: SizedBox(width: 300, height: 200)),
+        //         GooeyBlobShader(
+        //           shape: BlobShapeShader.rounded(BorderRadius.circular(50)),
+        //           child: SizedBox(width: 60, height: 60),
+        //         ),
+        //       ],
+        //     ),
+        //   ),
+        // ),
       ),
     );
   }
@@ -96,10 +97,12 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
     return SizedBox(
       width: 200,
       height: 200,
-      child: GooeyZoneShader(
+      child: GooeyZoneShader.radialGradient(
         color: Colors.black,
+        color2: Colors.indigoAccent,
+        color3: Colors.purple,
         borderWidth: 2,
-        borderColor: Colors.deepPurple,
+        // borderColor: Colors.deepPurple,
         gooiness: 30,
         // threshold: .3,
         // blurRadius: 8,
@@ -118,9 +121,7 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
                   ),
                   child: GooeyBlobShader(
                     // color: Colors.indigoAccent,
-                    child: SizedBox.square(
-                      dimension: 70,
-                    ),
+                    child: SizedBox.square(dimension: 70),
                   ),
                 ),
                 Transform.translate(
@@ -172,7 +173,7 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
                     ),
                   ),
 
-                  if (widget.counter > 6)
+                if (widget.counter > 6)
                   Transform.translate(
                     offset: Offset(
                       sin(t * 7 + 1) * 20 + sin(t * 7 + 2) * 50,
@@ -184,7 +185,7 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
                     ),
                   ),
 
-                  if (widget.counter > 7)
+                if (widget.counter > 7)
                   Transform.translate(
                     offset: Offset(
                       sin(t * 8 + 1) * 20 + sin(t * 8 + 2) * 50,

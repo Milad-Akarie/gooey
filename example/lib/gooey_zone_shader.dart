@@ -10,10 +10,37 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     required super.child,
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
-  });
+  }) : fillType = 0,
+       color2 = null,
+       color3 = null;
+
+  const GooeyZoneShader.linearGradient({
+    super.key,
+    required this.gooiness,
+    required this.color,
+    required Color this.color2,
+    this.color3,
+    this.borderWidth = 0.0,
+    this.borderColor = Colors.transparent,
+    required super.child,
+  }) : fillType = 1;
+
+  const GooeyZoneShader.radialGradient({
+    super.key,
+    required this.gooiness,
+    required this.color,
+    required Color this.color2,
+    this.color3,
+    this.borderWidth = 0.0,
+    this.borderColor = Colors.transparent,
+    required super.child,
+  }) : fillType = 2;
 
   final double gooiness;
   final Color color;
+  final int fillType;
+  final Color? color2;
+  final Color? color3;
   final double borderWidth;
   final Color borderColor;
 
@@ -22,6 +49,9 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     return RenderGooeyZoneShader(
       gooiness: gooiness,
       color: color,
+      fillType: fillType,
+      color2: color2,
+      color3: color3,
       borderWidth: borderWidth,
       borderColor: borderColor,
     );
@@ -35,6 +65,9 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     renderObject
       ..gooiness = gooiness
       ..color = color
+      ..fillType = fillType
+      ..color2 = color2
+      ..color3 = color3
       ..borderWidth = borderWidth
       ..borderColor = borderColor
       ..textDirection = Directionality.maybeOf(context);
@@ -87,10 +120,16 @@ class RenderGooeyZoneShader extends RenderProxyBox {
   RenderGooeyZoneShader({
     required double gooiness,
     required Color color,
+    int fillType = 0,
+    Color? color2,
+    Color? color3,
     required double borderWidth,
     required Color borderColor,
   }) : _gooiness = gooiness,
        _color = color,
+       _fillType = fillType,
+       _color2 = color2,
+       _color3 = color3,
        _borderWidth = borderWidth,
        _borderColor = borderColor {
     _loadProgram();
@@ -112,6 +151,27 @@ class RenderGooeyZoneShader extends RenderProxyBox {
   set color(Color value) {
     if (_color == value) return;
     _color = value;
+    markNeedsPaint();
+  }
+
+  int _fillType;
+  set fillType(int value) {
+    if (_fillType == value) return;
+    _fillType = value;
+    markNeedsPaint();
+  }
+
+  Color? _color2;
+  set color2(Color? value) {
+    if (_color2 == value) return;
+    _color2 = value;
+    markNeedsPaint();
+  }
+
+  Color? _color3;
+  set color3(Color? value) {
+    if (_color3 == value) return;
+    _color3 = value;
     markNeedsPaint();
   }
 
@@ -169,8 +229,40 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     final shader = _program!.fragmentShader();
     int i = 0;
 
-    const kBlobOffset = 16;
-    final kBlobParamsOffset = 48;
+    shader.setFloat(i++, offset.dx);
+    shader.setFloat(i++, offset.dy);
+    shader.setFloat(i++, w);
+    shader.setFloat(i++, h);
+
+    shader.setFloat(i++, goo);
+    shader.setFloat(i++, blobCount.toDouble());
+    shader.setFloat(i++, _borderWidth > 0 ? _borderWidth / w : 0.0);
+    shader.setFloat(i++, _fillType.toDouble());
+
+    shader.setFloat(i++, _color.r);
+    shader.setFloat(i++, _color.g);
+    shader.setFloat(i++, _color.b);
+    shader.setFloat(i++, _color.a);
+
+    final c2 = _color2 ?? _color;
+    shader.setFloat(i++, c2.r);
+    shader.setFloat(i++, c2.g);
+    shader.setFloat(i++, c2.b);
+    shader.setFloat(i++, c2.a);
+
+    final c3 = _color3 ?? _color2 ?? _color;
+    shader.setFloat(i++, c3.r);
+    shader.setFloat(i++, c3.g);
+    shader.setFloat(i++, c3.b);
+    shader.setFloat(i++, c3.a);
+
+    shader.setFloat(i++, _borderColor.r);
+    shader.setFloat(i++, _borderColor.g);
+    shader.setFloat(i++, _borderColor.b);
+    shader.setFloat(i++, _borderColor.a);
+
+    const kBlobOffset = 24;
+    final kBlobParamsOffset = 56;
 
     shader.setFloat(i++, offset.dx);
     shader.setFloat(i++, offset.dy);
