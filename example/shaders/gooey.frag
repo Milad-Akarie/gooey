@@ -65,14 +65,12 @@ float sdRoundRect(vec2 p, vec2 c, vec2 b, vec4 cr) {
 
 float sdRSuperellipse(vec2 p, vec2 c, vec2 b, vec4 cr) {
     vec2 d = p - c;
-
-    float r = d.x < 0.0
-        ? (d.y < 0.0 ? cr.x : cr.w)
-        : (d.y < 0.0 ? cr.y : cr.z);
+    
+    // Determine corner radius based on quadrant
+    float r = (d.x < 0.0) ? (d.y < 0.0 ? cr.x : cr.w) : (d.y < 0.0 ? cr.y : cr.z);
     r = min(r, min(b.x, b.y));
 
-    // r=0 → plain rectangle
-    if (r < 1e-4) {
+    if (r < 0.0001) {
         vec2 q = abs(d) - b;
         return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
     }
@@ -80,8 +78,11 @@ float sdRSuperellipse(vec2 p, vec2 c, vec2 b, vec4 cr) {
     float maxR = min(b.x, b.y);
     float t = clamp(r / maxR, 0.0, 1.0);
     float n = mix(8.0, 2.0, t);
-
-    // ... rest of Newton iteration
+    
+    // You were missing the actual math return here!
+    // Standard superellipse distance approximation:
+    vec2 q = abs(d) - (b - r);
+    return pow(pow(max(q.x, 0.0), n) + pow(max(q.y, 0.0), n), 1.0/n) - r;
 }
 // ----------------------------
 // Smooth union
@@ -114,38 +115,41 @@ float evalBlob(vec2 p, vec4 b, vec4 cornerRadius, float type) {
 layout(location = 0) out vec4 fragColor;
 
 void main() {
-   vec2 p = (FlutterFragCoord().xy - uBounds.xy) / uBounds.z;
+  
+    vec2 pos = (FlutterFragCoord().xy - uBounds.xy);
+    // 1. Normalize coordinates
+    #ifdef IMPELLER_TARGET_OPENGLES
+       pos.y = uBounds.w - pos.y;
+    #endif
 
-    const float INACTIVE = 1e9;
+    vec2 p = pos / uBounds.z;
 
-    float d1 = uBlobCount >= 1.0 ? evalBlob(p, blob1, blobCornerRadius1, blobType1) : INACTIVE;
-    float d2 = uBlobCount >= 2.0 ? evalBlob(p, blob2, blobCornerRadius2, blobType2) : INACTIVE;
-    float d3 = uBlobCount >= 3.0 ? evalBlob(p, blob3, blobCornerRadius3, blobType3) : INACTIVE;
-    float d4 = uBlobCount >= 4.0 ? evalBlob(p, blob4, blobCornerRadius4, blobType4) : INACTIVE;
-    float d5 = uBlobCount >= 5.0 ? evalBlob(p, blob5, blobCornerRadius5, blobType5) : INACTIVE;
-    float d6 = uBlobCount >= 6.0 ? evalBlob(p, blob6, blobCornerRadius6, blobType6) : INACTIVE;
-    float d7 = uBlobCount >= 7.0 ? evalBlob(p, blob7, blobCornerRadius7, blobType7) : INACTIVE;
-    float d8 = uBlobCount >= 8.0 ? evalBlob(p, blob8, blobCornerRadius8, blobType8) : INACTIVE;
+    // 2. Initialize d with the first blob to avoid smoothUnion with "INACTIVE"
+    // We assume uBlobCount is at least 1.0
+    float d = evalBlob(p, blob1, blobCornerRadius1, blobType1);
+     
+    // 3. Conditional accumulation
+    // Using an unrolled loop style that allows the compiler to optimize
+    if (uBlobCount >= 2.0) d = smoothUnion(d, evalBlob(p, blob2, blobCornerRadius2, blobType2), uGooiness);
+    if (uBlobCount >= 3.0) d = smoothUnion(d, evalBlob(p, blob3, blobCornerRadius3, blobType3), uGooiness);
+    if (uBlobCount >= 4.0) d = smoothUnion(d, evalBlob(p, blob4, blobCornerRadius4, blobType4), uGooiness);
+    if (uBlobCount >= 5.0) d = smoothUnion(d, evalBlob(p, blob5, blobCornerRadius5, blobType5), uGooiness);
+    if (uBlobCount >= 6.0) d = smoothUnion(d, evalBlob(p, blob6, blobCornerRadius6, blobType6), uGooiness);
+    if (uBlobCount >= 7.0) d = smoothUnion(d, evalBlob(p, blob7, blobCornerRadius7, blobType7), uGooiness);
+    if (uBlobCount >= 8.0) d = smoothUnion(d, evalBlob(p, blob8, blobCornerRadius8, blobType8), uGooiness);
 
-    float d = d1;
-    d = smoothUnion(d, d2, uGooiness);
-    d = smoothUnion(d, d3, uGooiness);
-    d = smoothUnion(d, d4, uGooiness);
-    d = smoothUnion(d, d5, uGooiness);
-    d = smoothUnion(d, d6, uGooiness);
-    d = smoothUnion(d, d7, uGooiness);
-    d = smoothUnion(d, d8, uGooiness);
-
-    float aa = fwidth(d);
-
+    float aa = 0.001;
+    // Combine smoothsteps into a single calculation area
     float outer = smoothstep(aa, -aa, d);
     float inner = smoothstep(aa, -aa, d + uBorderWidth);
 
-    float borderMask = outer * (1.0 - inner);
-    float fillMask   = inner;
+    // 5. Optimized Blending
+    // We can calculate the factor once to avoid multiple vec4 multiplications
+    float borderMask = clamp(outer - inner, 0.0, 1.0);
+    
+    // mix() is often hardware-accelerated and cleaner than manual addition
+    vec4 color = mix(vec4(0.0), uBorderColor, borderMask);
+    color = mix(color, uColor, inner);
 
-    vec4 fill   = vec4(uColor.rgb, uColor.a) * fillMask;
-    vec4 border = vec4(uBorderColor.rgb, uBorderColor.a) * borderMask;
-
-    fragColor = fill + border;
+    fragColor = color;
 }

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gooey/gooey.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
-
+         
 void main() {
   runApp(const MyApp());
 }
@@ -98,8 +98,8 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
       height: 200,
       child: GooeyZoneShader(
         color: Colors.black,
-        borderWidth: 2,
-        borderColor: Colors.purple,
+        borderWidth: 0,
+        borderColor: Colors.green,
         gooiness: 30,
         // threshold: .3,
         // blurRadius: 8,
