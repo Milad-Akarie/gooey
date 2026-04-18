@@ -169,6 +169,10 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     final shader = _program!.fragmentShader();
     int i = 0;
 
+    const kBlobOffset = 16;
+    final kCornerRadiusOffset = 48;
+    final kTypeOffset = 80;
+
     shader.setFloat(i++, offset.dx);
     shader.setFloat(i++, offset.dy);
     shader.setFloat(i++, w);
@@ -176,13 +180,18 @@ class RenderGooeyZoneShader extends RenderProxyBox {
 
     shader.setFloat(i++, goo);
     shader.setFloat(i++, blobCount.toDouble());
+    shader.setFloat(i++, _borderWidth > 0 ? _borderWidth / w : 0.0);
+    shader.setFloat(i++, 0.0); // unused
 
-    const kBlobOffset = 6;
-    final kCornerRadiusOffset = kBlobOffset + maxBlobCount * 4;
-    final kTypeOffset = kCornerRadiusOffset + maxBlobCount * 4;
-    final kColorOffset = kTypeOffset + maxBlobCount;
-    final kBorderWidthOffset = kColorOffset + 4;
-    final kBorderColorOffset = kBorderWidthOffset + 1;
+    shader.setFloat(i++, _color.r);
+    shader.setFloat(i++, _color.g);
+    shader.setFloat(i++, _color.b);
+    shader.setFloat(i++, _color.a);
+
+    shader.setFloat(i++, _borderColor.r);
+    shader.setFloat(i++, _borderColor.g);
+    shader.setFloat(i++, _borderColor.b);
+    shader.setFloat(i++, _borderColor.a);
 
     for (int b = 0; b < maxBlobCount; b++) {
       final int dataIdx = kBlobOffset + b * 4;
@@ -242,21 +251,10 @@ class RenderGooeyZoneShader extends RenderProxyBox {
       }
     }
 
-    shader.setFloat(kColorOffset + 0, _color.r);
-    shader.setFloat(kColorOffset + 1, _color.g);
-    shader.setFloat(kColorOffset + 2, _color.b);
-    shader.setFloat(kColorOffset + 3, _color.a);
-
-    shader.setFloat(
-      kBorderWidthOffset,
-      _borderWidth > 0 ? _borderWidth / w : 0.0,
+    context.canvas.drawRect(
+      (offset & size).inflate(_borderWidth * 2),
+      Paint()..shader = shader,
     );
-    shader.setFloat(kBorderColorOffset + 0, _borderColor.r);
-    shader.setFloat(kBorderColorOffset + 1, _borderColor.g);
-    shader.setFloat(kBorderColorOffset + 2, _borderColor.b);
-    shader.setFloat(kBorderColorOffset + 3, _borderColor.a);
-
-    context.canvas.drawRect((offset & size).inflate(_borderWidth * 2), Paint()..shader = shader);
     super.paint(context, offset);
   }
 }

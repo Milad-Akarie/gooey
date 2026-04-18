@@ -5,45 +5,44 @@ precision highp float;
 
 // x, y, width, height
 layout(location = 0) uniform vec4 uBounds; 
-layout(location = 1) uniform float uGooiness;
-layout(location = 2) uniform float uBlobCount;
+// x: gooiness, y: blobCount, z: borderWidth, w: unused
+layout(location = 1) uniform vec4 uParams;
+
+// Fill color
+layout(location = 2) uniform vec4 uColor;
+
+// Border color
+layout(location = 3) uniform vec4 uBorderColor;
 
 // Per blob: (cx, cy, half_w, half_w)
-layout(location = 3) uniform vec4 blob1;
-layout(location = 4) uniform vec4 blob2;
-layout(location = 5) uniform vec4 blob3;
-layout(location = 6) uniform vec4 blob4;
-layout(location = 7) uniform vec4 blob5;
-layout(location = 8) uniform vec4 blob6;
-layout(location = 9) uniform vec4 blob7;
-layout(location = 10) uniform vec4 blob8;
+layout(location = 4) uniform vec4 blob1;
+layout(location = 5) uniform vec4 blob2;
+layout(location = 6) uniform vec4 blob3;
+layout(location = 7) uniform vec4 blob4;
+layout(location = 8) uniform vec4 blob5;
+layout(location = 9) uniform vec4 blob6;
+layout(location = 10) uniform vec4 blob7;
+layout(location = 11) uniform vec4 blob8;
 
 // Per blob corner radii: (topLeft, topRight, bottomRight, bottomLeft)
-layout(location = 11) uniform vec4 blobCornerRadius1;
-layout(location = 12) uniform vec4 blobCornerRadius2;
-layout(location = 13) uniform vec4 blobCornerRadius3;
-layout(location = 14) uniform vec4 blobCornerRadius4;
-layout(location = 15) uniform vec4 blobCornerRadius5;
-layout(location = 16) uniform vec4 blobCornerRadius6;
-layout(location = 17) uniform vec4 blobCornerRadius7;
-layout(location = 18) uniform vec4 blobCornerRadius8;
+layout(location = 12) uniform vec4 blobCornerRadius1;
+layout(location = 13) uniform vec4 blobCornerRadius2;
+layout(location = 14) uniform vec4 blobCornerRadius3;
+layout(location = 15) uniform vec4 blobCornerRadius4;
+layout(location = 16) uniform vec4 blobCornerRadius5;
+layout(location = 17) uniform vec4 blobCornerRadius6;
+layout(location = 18) uniform vec4 blobCornerRadius7;
+layout(location = 19) uniform vec4 blobCornerRadius8;
 
 // 0.0 = circle, 1.0 = rounded rect, 2.0 = superellipse
-layout(location = 19) uniform float blobType1;
-layout(location = 20) uniform float blobType2;
-layout(location = 21) uniform float blobType3;
-layout(location = 22) uniform float blobType4;
-layout(location = 23) uniform float blobType5;
-layout(location = 24) uniform float blobType6;
-layout(location = 25) uniform float blobType7;
-layout(location = 26) uniform float blobType8;
-
-// Fill color (offset 78)
-layout(location = 27) uniform vec4 uColor;
-
-// Border width and color (offset 82)
-layout(location = 28) uniform float uBorderWidth;
-layout(location = 29) uniform vec4 uBorderColor;
+layout(location = 20) uniform float blobType1;
+layout(location = 21) uniform float blobType2;
+layout(location = 22) uniform float blobType3;
+layout(location = 23) uniform float blobType4;
+layout(location = 24) uniform float blobType5;
+layout(location = 25) uniform float blobType6;
+layout(location = 26) uniform float blobType7;
+layout(location = 27) uniform float blobType8;
 
 // ----------------------------
 // Distance functions
@@ -125,23 +124,23 @@ void main() {
     vec2 p = pos / uBounds.z;
 
     // 2. Initialize d with the first blob to avoid smoothUnion with "INACTIVE"
-    // We assume uBlobCount is at least 1.0
+    // We assume uParams.y is at least 1.0
     float d = evalBlob(p, blob1, blobCornerRadius1, blobType1);
      
     // 3. Conditional accumulation
     // Using an unrolled loop style that allows the compiler to optimize
-    if (uBlobCount >= 2.0) d = smoothUnion(d, evalBlob(p, blob2, blobCornerRadius2, blobType2), uGooiness);
-    if (uBlobCount >= 3.0) d = smoothUnion(d, evalBlob(p, blob3, blobCornerRadius3, blobType3), uGooiness);
-    if (uBlobCount >= 4.0) d = smoothUnion(d, evalBlob(p, blob4, blobCornerRadius4, blobType4), uGooiness);
-    if (uBlobCount >= 5.0) d = smoothUnion(d, evalBlob(p, blob5, blobCornerRadius5, blobType5), uGooiness);
-    if (uBlobCount >= 6.0) d = smoothUnion(d, evalBlob(p, blob6, blobCornerRadius6, blobType6), uGooiness);
-    if (uBlobCount >= 7.0) d = smoothUnion(d, evalBlob(p, blob7, blobCornerRadius7, blobType7), uGooiness);
-    if (uBlobCount >= 8.0) d = smoothUnion(d, evalBlob(p, blob8, blobCornerRadius8, blobType8), uGooiness);
+    if (uParams.y >= 2.0) d = smoothUnion(d, evalBlob(p, blob2, blobCornerRadius2, blobType2), uParams.x);
+    if (uParams.y >= 3.0) d = smoothUnion(d, evalBlob(p, blob3, blobCornerRadius3, blobType3), uParams.x);
+    if (uParams.y >= 4.0) d = smoothUnion(d, evalBlob(p, blob4, blobCornerRadius4, blobType4), uParams.x);
+    if (uParams.y >= 5.0) d = smoothUnion(d, evalBlob(p, blob5, blobCornerRadius5, blobType5), uParams.x);
+    if (uParams.y >= 6.0) d = smoothUnion(d, evalBlob(p, blob6, blobCornerRadius6, blobType6), uParams.x);
+    if (uParams.y >= 7.0) d = smoothUnion(d, evalBlob(p, blob7, blobCornerRadius7, blobType7), uParams.x);
+    if (uParams.y >= 8.0) d = smoothUnion(d, evalBlob(p, blob8, blobCornerRadius8, blobType8), uParams.x);
 
     float aa = 0.001;
     // Combine smoothsteps into a single calculation area
     float outer = smoothstep(aa, -aa, d);
-    float inner = smoothstep(aa, -aa, d + uBorderWidth);
+    float inner = smoothstep(aa, -aa, d + uParams.z);
 
     // 5. Optimized Blending
     // We can calculate the factor once to avoid multiple vec4 multiplications
