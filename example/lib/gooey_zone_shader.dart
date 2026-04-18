@@ -29,7 +29,7 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
        center = null,
        radius = null;
 
-const GooeyZoneShader.linearGradient({
+  const GooeyZoneShader.linearGradient({
     super.key,
     required this.gooiness,
     required this.color,
@@ -40,9 +40,9 @@ const GooeyZoneShader.linearGradient({
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
     required super.child,
-  })  : fillType = thirdColor != null ? FillType.linear3 : FillType.linear2,
-        center = null,
-        radius = null;
+  }) : fillType = thirdColor != null ? FillType.linear3 : FillType.linear2,
+       center = null,
+       radius = null;
 
   const GooeyZoneShader.radialGradient({
     super.key,
@@ -55,9 +55,9 @@ const GooeyZoneShader.linearGradient({
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
     required super.child,
-  })  : fillType = thirdColor != null ? FillType.radial3 : FillType.radial2,
-        begin = null,
-        end = null;
+  }) : fillType = thirdColor != null ? FillType.radial3 : FillType.radial2,
+       begin = null,
+       end = null;
 
   final double gooiness;
   final Color color;
@@ -136,8 +136,12 @@ sealed class BlobShapeShader {
   const BlobShapeShader();
 
   const factory BlobShapeShader.circle() = _CircleBlobShader;
-  const factory BlobShapeShader.rounded(BorderRadius borderRadius) =
+
+  const factory BlobShapeShader.rounded(double borderRadius) =
       _RoundedRectBlobShader;
+
+  const factory BlobShapeShader.superEllipse(double borderRadius) =
+      _SuperEllipseBlobShader;
 }
 
 class _CircleBlobShader extends BlobShapeShader {
@@ -146,7 +150,12 @@ class _CircleBlobShader extends BlobShapeShader {
 
 class _RoundedRectBlobShader extends BlobShapeShader {
   const _RoundedRectBlobShader(this.borderRadius);
-  final BorderRadius borderRadius;
+  final double borderRadius;
+}
+
+class _SuperEllipseBlobShader extends BlobShapeShader {
+  const _SuperEllipseBlobShader(this.borderRadius);
+  final double borderRadius;
 }
 
 class RenderGooeyZoneShader extends RenderProxyBox {
@@ -334,7 +343,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
 
     // Gradient params
     final textDir = _textDirection ?? TextDirection.ltr;
-if (_fillType == FillType.linear2 || _fillType == FillType.linear3) {
+    if (_fillType == FillType.linear2 || _fillType == FillType.linear3) {
       final start = _gradientStart?.resolve(textDir) ?? Alignment.centerLeft;
       final end = _gradientEnd?.resolve(textDir) ?? Alignment.centerRight;
       shader.setFloat(i++, (start.x + 1.0) * 0.5);
@@ -397,8 +406,13 @@ if (_fillType == FillType.linear2 || _fillType == FillType.linear3) {
         } else if (shape is _RoundedRectBlobShader) {
           hw = blobSize.width * 0.5 / w;
           hh = blobSize.height * 0.5 / w;
-          borderRadius = shape.borderRadius.topLeft.x / w;
+          borderRadius = shape.borderRadius / w;
           type = 1.0;
+        } else if (shape is _SuperEllipseBlobShader) {
+          hw = blobSize.width * 0.5 / w;
+          hh = blobSize.height * 0.5 / w;
+          borderRadius = shape.borderRadius / w;
+          type = 2.0;
         } else {
           hw = blobSize.width * 0.5 / w;
           hh = blobSize.height * 0.5 / w;

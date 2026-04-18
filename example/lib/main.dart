@@ -28,30 +28,41 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: Scaffold(
-        body: Center(child: _AnimatedBlobs(5)),
-        // body: Center(
-        //   child: GooeyZoneShader.radialGradient(
-        //     gooiness: 30,
-        //     color: Colors.indigoAccent,
-        //     secondColor: Colors.red,
-        //     thirdColor: Colors.green,
-        //     radius: .2,
-        //     child: Column(
-        //       mainAxisSize: .min,
-        //       mainAxisAlignment: .center,
-        //       crossAxisAlignment: .center,
-        //       spacing: 8,
-        //       children: [
-        //         GooeyBlobShader(child: SizedBox(width: 300, height: 300)),
-              
-        //         // GooeyBlobShader(
-        //         //   shape: BlobShapeShader.rounded(BorderRadius.circular(50)),
-        //         //   child: SizedBox(width: 60, height: 60),
-        //         // ),
-        //       ],
-        //     ),
-        //   ),
-        // ),
+        // body: Center(child: _AnimatedBlobs(5)),
+        body: Center(
+          child: GooeyZoneShader(
+            gooiness: 30,
+            color: Colors.indigoAccent,
+            child: Column(
+              mainAxisSize: .min,
+              mainAxisAlignment: .center,
+              crossAxisAlignment: .center,
+              spacing: 8,
+              children: [
+                GooeyBlobShader(
+                  shape: .superEllipse(64),
+                  child: SizedBox(
+                    width: 300,
+                    height: 300,
+                    child: DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: Colors.red.withValues(alpha: .5),
+                        shape: RoundedSuperellipseBorder(
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // GooeyBlobShader(
+                //   shape: BlobShapeShader.rounded(30),
+                //   child: SizedBox(width: 60, height: 60),
+                // ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

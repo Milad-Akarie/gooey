@@ -105,7 +105,7 @@ float sdRSuperellipse(vec2 p, vec2 c, vec2 b, float r) {
 
     float maxR = min(b.x, b.y);
     float t = clamp(r / maxR, 0.0, 1.0);
-    float n = mix(8.0, 2.0, t);
+    float n = mix(4.5, 3.5, t);
 
     vec2 q = abs(d) - (b - r);
     return pow(pow(max(q.x, 0.0), n) + pow(max(q.y, 0.0), n), 1.0 / n) - r;
