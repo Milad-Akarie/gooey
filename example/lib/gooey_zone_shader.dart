@@ -49,7 +49,7 @@ class GooeyBlobShader extends SingleChildRenderObjectWidget {
     BuildContext context,
     RenderGooeyBlobShader renderObject,
   ) {
-    renderObject..shape = shape;
+    renderObject.shape = shape;
   }
 }
 
@@ -71,6 +71,8 @@ class _RoundedRectBlobShader extends BlobShapeShader {
 }
 
 class RenderGooeyZoneShader extends RenderProxyBox {
+  static const int maxBlobCount = 8;
+
   RenderGooeyZoneShader({required double gooiness, required Color color})
     : _gooiness = gooiness,
       _color = color {
@@ -122,8 +124,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    if (_program == null ) {
-      context.canvas.drawRect(offset & size, Paint()..color = Colors.red);
+    if (_program == null) {
       super.paint(context, offset);
       return;
     }
@@ -131,7 +132,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     final w = size.width;
     final h = size.height;
 
-    final blobCount = _blobs.length.clamp(0, 6);
+    final blobCount = _blobs.length.clamp(0, maxBlobCount);
     final goo = _gooiness / w;
 
     final shader = _program!.fragmentShader();
@@ -146,11 +147,11 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     shader.setFloat(i++, blobCount.toDouble());
 
     const kBlobOffset = 6;
-    const kCornerRadiusOffset = 30;
-    const kTypeOffset = 54;
-    const kColorOffset = 60;
+    final kCornerRadiusOffset = kBlobOffset + maxBlobCount * 4;
+    final kTypeOffset = kCornerRadiusOffset + maxBlobCount * 4;
+    final kColorOffset = kTypeOffset + maxBlobCount;
 
-    for (int b = 0; b < 6; b++) {
+    for (int b = 0; b < maxBlobCount; b++) {
       final int dataIdx = kBlobOffset + b * 4;
       final int cornerIdx = kCornerRadiusOffset + b * 4;
       final int typeIdx = kTypeOffset + b;

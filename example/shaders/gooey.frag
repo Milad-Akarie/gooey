@@ -8,13 +8,15 @@ uniform vec4 uBounds;
 uniform float uGooiness;
 uniform float uBlobCount;
 
-// Per blob: (cx, cy, half_w, half_h)
+// Per blob: (cx, cy, half_w, half_w)
 uniform vec4 blob1;
 uniform vec4 blob2;
 uniform vec4 blob3;
 uniform vec4 blob4;
 uniform vec4 blob5;
 uniform vec4 blob6;
+uniform vec4 blob7;
+uniform vec4 blob8;
 
 // Per blob corner radii: (topLeft, topRight, bottomRight, bottomLeft)
 uniform vec4 blobCornerRadius1;
@@ -23,6 +25,8 @@ uniform vec4 blobCornerRadius3;
 uniform vec4 blobCornerRadius4;
 uniform vec4 blobCornerRadius5;
 uniform vec4 blobCornerRadius6;
+uniform vec4 blobCornerRadius7;
+uniform vec4 blobCornerRadius8;
 
 // 0.0 = circle, 1.0 = rounded rect, 2.0 = superellipse
 uniform float blobType1;
@@ -31,6 +35,8 @@ uniform float blobType3;
 uniform float blobType4;
 uniform float blobType5;
 uniform float blobType6;
+uniform float blobType7;
+uniform float blobType8;
 
 // Fill color (offset 60)
 uniform vec4 uColor;
@@ -114,6 +120,8 @@ void main() {
     float d4 = uBlobCount >= 4.0 ? evalBlob(p, blob4, blobCornerRadius4, blobType4) : INACTIVE;
     float d5 = uBlobCount >= 5.0 ? evalBlob(p, blob5, blobCornerRadius5, blobType5) : INACTIVE;
     float d6 = uBlobCount >= 6.0 ? evalBlob(p, blob6, blobCornerRadius6, blobType6) : INACTIVE;
+    float d7 = uBlobCount >= 7.0 ? evalBlob(p, blob7, blobCornerRadius7, blobType7) : INACTIVE;
+    float d8 = uBlobCount >= 8.0 ? evalBlob(p, blob8, blobCornerRadius8, blobType8) : INACTIVE;
 
     float d = d1;
     d = smoothUnion(d, d2, uGooiness);
@@ -121,6 +129,8 @@ void main() {
     d = smoothUnion(d, d4, uGooiness);
     d = smoothUnion(d, d5, uGooiness);
     d = smoothUnion(d, d6, uGooiness);
+    d = smoothUnion(d, d7, uGooiness);
+    d = smoothUnion(d, d8, uGooiness);
 
     // Anti-aliasing factor
     float aa = fwidth(d);
