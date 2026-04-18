@@ -94,19 +94,13 @@ float evalBlob(vec2 p, vec4 b, vec4 params) {
 layout(location = 0) out vec4 fragColor;
 
 void main() {
-  
     vec2 pos = (FlutterFragCoord().xy - uBounds.xy);
-    // 1. Normalize coordinates
-    #ifdef IMPELLER_TARGET_OPENGLES
-       pos.y = uBounds.w - pos.y;
-    #endif
-
     vec2 p = pos / uBounds.z;
 
     // 2. Initialize d with the first blob to avoid smoothUnion with "INACTIVE"
     // We assume uParams.y is at least 1.0
     float d = evalBlob(p, blob1, blobParams1);
-     
+    
     // 3. Conditional accumulation
     // Using an unrolled loop style that allows the compiler to optimize
     if (uParams.y >= 2.0) d = smoothUnion(d, evalBlob(p, blob2, blobParams2), uParams.x);
