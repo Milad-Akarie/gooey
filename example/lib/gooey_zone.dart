@@ -2,16 +2,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-enum FillType {
-  solid(0),
-  linear2(1),
-  linear3(2),
-  radial2(3),
-  radial3(4);
-
-  const FillType(this.value);
-  final int value;
-}
 
 class GooeyZone extends SingleChildRenderObjectWidget {
   const GooeyZone({
@@ -524,4 +514,15 @@ class RenderGooeyBlob extends RenderProxyBox {
     }
     super.detach();
   }
+}
+
+enum FillType {
+  solid(0),
+  linear2(1),
+  linear3(2),
+  radial2(3),
+  radial3(4);
+
+  const FillType(this.value);
+  final int value;
 }
