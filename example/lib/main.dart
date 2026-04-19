@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:gooey/gooey.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      home: MyHomePage(title: 'Gooey Blobs')
+      home: MyHomePage(title: 'Gooey Blobs'),
     );
   }
 }
@@ -264,5 +265,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
- 

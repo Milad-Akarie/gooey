@@ -292,8 +292,9 @@ class GooeyBlob extends SingleChildRenderObjectWidget {
 
 /// The render object for [GooeyZone] that handles the shader logic and blob management.
 class RenderGooeyZone extends RenderProxyBox {
-  static const int maxBlobCount = 10;
+  static const int _maxBlobCount = 10;
 
+  /// Creates a [RenderGooeyZone] with the given parameters.
   RenderGooeyZone({
     required double gooiness,
     required Color color,
@@ -415,17 +416,17 @@ class RenderGooeyZone extends RenderProxyBox {
   void _registerBlob(RenderGooeyBlob blob) {
     if (_blobs.contains(blob)) return;
     assert(
-      _blobs.length < maxBlobCount,
-      'Exceeded maximum blob count of $maxBlobCount',
+      _blobs.length < _maxBlobCount,
+      'Exceeded maximum blob count of $_maxBlobCount',
     );
     _blobs.add(blob);
-    markNeedsBlobsUpdate();
+    _markNeedsBlobsUpdate();
     markNeedsPaint();
   }
 
   void _unregisterBlob(RenderGooeyBlob blob) {
     _blobs.remove(blob);
-    markNeedsBlobsUpdate();
+    _markNeedsBlobsUpdate();
     markNeedsPaint();
   }
 
@@ -455,7 +456,7 @@ class RenderGooeyZone extends RenderProxyBox {
     return _effectiveBlobs = [...normal, ...cutouts];
   }
 
-  void markNeedsBlobsUpdate() {
+  void _markNeedsBlobsUpdate() {
     _effectiveBlobs = null;
   }
 
@@ -535,7 +536,7 @@ class RenderGooeyZone extends RenderProxyBox {
     const kBlobOffset = 28;
     const kBlobParamsOffset = 68;
 
-    for (int b = 0; b < maxBlobCount; b++) {
+    for (int b = 0; b < _maxBlobCount; b++) {
       final int dataIdx = (kBlobOffset + b * 4);
       final int paramsIdx = (kBlobParamsOffset + b * 4);
 
@@ -610,8 +611,11 @@ class RenderGooeyZone extends RenderProxyBox {
 
 /// The render object for [GooeyBlob] that registers itself with the nearest ancestor [RenderGooeyZone].
 class RenderGooeyBlob extends RenderProxyBox {
+  /// Creates a [RenderGooeyBlob] with the given shape and cutout properties.
   RenderGooeyBlob({required BlobShape shape, bool cutout = false}) : _shape = shape, _cutout = cutout;
 
+  /// The shape of the blob, which can be a circle or a rounded rectangle.
+  BlobShape get shape => _shape;
   BlobShape _shape;
   set shape(BlobShape value) {
     if (_shape == value) return;
@@ -619,14 +623,13 @@ class RenderGooeyBlob extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  BlobShape get shape => _shape;
-
+  /// Whether this blob acts as a cutout, punging a hole in the gooey effect instead of adding to it.
   bool get cutout => _cutout;
   bool _cutout;
   set cutout(bool value) {
     if (_cutout == value) return;
     _cutout = value;
-    _zone?.markNeedsBlobsUpdate();
+    _zone?._markNeedsBlobsUpdate();
     markNeedsPaint();
   }
 
