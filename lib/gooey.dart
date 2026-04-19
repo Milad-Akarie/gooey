@@ -1,1 +1,1 @@
-export 'src/gooey_zone.dart';
+export 'src/gooey_zone.dart' show GooeyZone, GooeyBlob, BlobShape;

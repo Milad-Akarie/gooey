@@ -1,7 +1,6 @@
 import 'dart:math';
-import 'package:example/gooey_zone.dart';
 import 'package:flutter/material.dart';
-
+import 'package:gooey/gooey.dart';
 void main() {
   runApp(const MyApp());
 }
