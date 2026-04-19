@@ -2,11 +2,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+const _kShaderAsset = 'shaders/gooey.frag';
 
 class GooeyZone extends SingleChildRenderObjectWidget {
   const GooeyZone({
     super.key,
-     this.gooiness = 30,
+    this.gooiness = 30,
     required this.color,
     required super.child,
     this.borderWidth = 0.0,
@@ -85,10 +86,7 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   }
 
   @override
-  void updateRenderObject(
-    BuildContext context,
-    RenderGooeyZone renderObject,
-  ) {
+  void updateRenderObject(BuildContext context, RenderGooeyZone renderObject) {
     renderObject
       ..gooiness = gooiness
       ..color = color
@@ -122,32 +120,12 @@ class GooeyBlob extends SingleChildRenderObjectWidget {
   }
 
   @override
-  void updateRenderObject(
-    BuildContext context,
-    RenderGooeyBlob renderObject,
-  ) {
+  void updateRenderObject(BuildContext context, RenderGooeyBlob renderObject) {
     renderObject.shape = shape;
     renderObject.cutout = cutout;
   }
 }
 
-sealed class BlobShape {
-  const BlobShape();
-
-  const factory BlobShape.circle() = _CircleBlobShader;
-
-  const factory BlobShape.rounded(double borderRadius) =
-      _RoundedRectBlobShader;
-}
-
-class _CircleBlobShader extends BlobShape {
-  const _CircleBlobShader();
-}
-
-class _RoundedRectBlobShader extends BlobShape {
-  const _RoundedRectBlobShader(this.borderRadius);
-  final double borderRadius;
-}
 
 class RenderGooeyZone extends RenderProxyBox {
   static const int maxBlobCount = 10;
@@ -262,7 +240,7 @@ class RenderGooeyZone extends RenderProxyBox {
 
   Future<void> _loadProgram() async {
     try {
-      _program = await ui.FragmentProgram.fromAsset('shaders/gooey.frag');
+      _program = await ui.FragmentProgram.fromAsset(_kShaderAsset);
     } catch (e) {
       debugPrint('Error loading shader: $e');
       _program = null;
@@ -272,7 +250,10 @@ class RenderGooeyZone extends RenderProxyBox {
 
   void _registerBlob(RenderGooeyBlob blob) {
     if (_blobs.contains(blob)) return;
-    assert(_blobs.length < maxBlobCount, 'Exceeded maximum blob count of $maxBlobCount');
+    assert(
+      _blobs.length < maxBlobCount,
+      'Exceeded maximum blob count of $maxBlobCount',
+    );
     _blobs.add(blob);
     markNeedsBlobsUpdate();
     markNeedsPaint();
@@ -418,19 +399,19 @@ class RenderGooeyZone extends RenderProxyBox {
         double hh;
         double borderRadius = 0.0;
         double type = 0.0;
-        if (shape is _CircleBlobShader) {
-          final radius = blobSize.shortestSide * 0.5;
-          hw = radius / w;
-          hh = radius / w;
-        } else if (shape is _RoundedRectBlobShader) {
-          hw = blobSize.width * 0.5 / w;
-          hh = blobSize.height * 0.5 / w;
-          borderRadius = shape.borderRadius / w;
-          type = 1.0;
-        } else {
-          hw = blobSize.width * 0.5 / w;
-          hh = blobSize.height * 0.5 / w;
+
+        switch (shape) {
+          case _CircleBlob():
+            final radius = blobSize.shortestSide * 0.5;
+            hw = radius / w;
+            hh = radius / w;
+          case _RoundedRectBlob():
+            hw = blobSize.width * 0.5 / w;
+            hh = blobSize.height * 0.5 / w;
+            borderRadius = shape.borderRadius / w;
+            type = 1.0;
         }
+
         shader.setFloat(dataIdx + 0, cx);
         shader.setFloat(dataIdx + 1, cy);
         shader.setFloat(dataIdx + 2, hw);
@@ -515,6 +496,24 @@ class RenderGooeyBlob extends RenderProxyBox {
     super.detach();
   }
 }
+
+sealed class BlobShape {
+  const BlobShape();
+
+  const factory BlobShape.circle() = _CircleBlob;
+
+  const factory BlobShape.rounded(double borderRadius) = _RoundedRectBlob;
+}
+
+class _CircleBlob extends BlobShape {
+  const _CircleBlob();
+}
+
+class _RoundedRectBlob extends BlobShape {
+  const _RoundedRectBlob(this.borderRadius);
+  final double borderRadius;
+}
+
 
 enum FillType {
   solid(0),
