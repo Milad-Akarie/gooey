@@ -70,11 +70,9 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
     return SizedBox(
       width: 200,
       height: 200,
-      child: GooeyZone.radialGradient(
+      child: GooeyZone.linearGradient(
         color: Colors.blue,
-        secondColor: Colors.black,
-        center: Alignment.center,
-        radius: .5,
+        secondColor: Colors.purple,
         borderWidth: 1,
         borderColor: Colors.deepPurple,
         gooiness: 30,
