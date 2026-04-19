@@ -28,16 +28,20 @@ layout(location = 11) uniform vec4 blob5;
 layout(location = 12) uniform vec4 blob6;
 layout(location = 13) uniform vec4 blob7;
 layout(location = 14) uniform vec4 blob8;
+layout(location = 15) uniform vec4 blob9;
+layout(location = 16) uniform vec4 blob10;
 
 // Per blob: x: borderRadius, y: type, z: cutout (0=false, 1=true), w: unused
-layout(location = 15) uniform vec4 blobParams1;
-layout(location = 16) uniform vec4 blobParams2;
-layout(location = 17) uniform vec4 blobParams3;
-layout(location = 18) uniform vec4 blobParams4;
-layout(location = 19) uniform vec4 blobParams5;
-layout(location = 20) uniform vec4 blobParams6;
-layout(location = 21) uniform vec4 blobParams7;
-layout(location = 22) uniform vec4 blobParams8;
+layout(location = 17) uniform vec4 blobParams1;
+layout(location = 18) uniform vec4 blobParams2;
+layout(location = 19) uniform vec4 blobParams3;
+layout(location = 20) uniform vec4 blobParams4;
+layout(location = 21) uniform vec4 blobParams5;
+layout(location = 22) uniform vec4 blobParams6;
+layout(location = 23) uniform vec4 blobParams7;
+layout(location = 24) uniform vec4 blobParams8;
+layout(location = 25) uniform vec4 blobParams9;
+layout(location = 26) uniform vec4 blobParams10;
 
 // getFill determines the fill color based on the fill type and gradient parameters
 vec4 getFill(vec2 p, float fillCode, vec4 color, vec4 color2, vec4 color3, vec4 gradientParams) {
@@ -144,6 +148,8 @@ void main() {
     if (uParams.y >= 6.0) d = accumulateBlob(d, p, blob6, blobParams6, uParams.x);
     if (uParams.y >= 7.0) d = accumulateBlob(d, p, blob7, blobParams7, uParams.x);
     if (uParams.y >= 8.0) d = accumulateBlob(d, p, blob8, blobParams8, uParams.x);
+    if (uParams.y >= 9.0) d = accumulateBlob(d, p, blob9, blobParams9, uParams.x);
+    if (uParams.y >= 10.0) d = accumulateBlob(d, p, blob10, blobParams10, uParams.x);
 
     float aa = 0.001;
     // Combine smoothsteps into a single calculation area
