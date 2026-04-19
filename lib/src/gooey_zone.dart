@@ -2,7 +2,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-const _kShaderAsset = 'shaders/gooey.frag';
+const _kShaderAsset = 'packages/gooey/shaders/gooey.frag';
 
 /// A zone that renders gooey blobs behind its registered [GooeyBlob] children.
 ///
