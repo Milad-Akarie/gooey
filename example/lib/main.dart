@@ -28,11 +28,13 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: Scaffold(
-        // body: Center(child: _AnimatedBlobs(5)),
+        // body: Center(child: _AnimatedBlobs(7)),
         body: Center(
           child: GooeyZoneShader(
-            gooiness: 30,
-            color: Colors.indigoAccent,
+            gooiness: 0,
+            color: Colors.green,
+            // borderColor: Colors.yellow,
+            // borderWidth: 1,
             child: Column(
               mainAxisSize: .min,
               mainAxisAlignment: .center,
@@ -40,25 +42,24 @@ class MyApp extends StatelessWidget {
               spacing: 8,
               children: [
                 GooeyBlobShader(
-                  shape: .superEllipse(64),
+                  shape: .rounded(48),
                   child: SizedBox(
-                    width: 300,
-                    height: 300,
+                    width: 200,
+                    height: 150,
                     child: DecoratedBox(
                       decoration: ShapeDecoration(
-                        color: Colors.red.withValues(alpha: .5),
+                        color: Colors.yellow.withValues(alpha: .8),
                         shape: RoundedSuperellipseBorder(
-                          borderRadius: BorderRadius.circular(32),
+                          borderRadius: BorderRadius.circular(48),
                         ),
                       ),
                     ),
                   ),
                 ),
-
-                // GooeyBlobShader(
-                //   shape: BlobShapeShader.rounded(30),
-                //   child: SizedBox(width: 60, height: 60),
-                // ),
+                GooeyBlobShader(
+                  shape: .rounded(48),
+                  child: SizedBox(width: 200, height: 150),
+                ),
               ],
             ),
           ),
@@ -113,7 +114,7 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
         color: Colors.blue,
         secondColor: Colors.black,
         center: Alignment.center,
-        radius: .9,
+        radius: .5,
         borderWidth: 1,
         borderColor: Colors.deepPurple,
         gooiness: 50,

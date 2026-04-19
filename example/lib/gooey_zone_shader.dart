@@ -21,7 +21,9 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     required super.child,
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
-  }) : fillType = FillType.solid,
+  }) : assert(gooiness >= 0, 'Gooiness must be non-negative'),
+       assert(borderWidth >= 0, 'Border width must be non-negative'),
+       fillType = FillType.solid,
        secondColor = null,
        thirdColor = null,
        begin = null,
@@ -35,12 +37,14 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     required this.color,
     required Color this.secondColor,
     this.thirdColor,
-    this.begin,
-    this.end,
+    AlignmentGeometry this.begin = Alignment.centerLeft,
+    AlignmentGeometry this.end = Alignment.centerRight,
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
     required super.child,
-  }) : fillType = thirdColor != null ? FillType.linear3 : FillType.linear2,
+  }) : assert(gooiness >= 0, 'Gooiness must be non-negative'),
+       assert(borderWidth >= 0, 'Border width must be non-negative'),
+       fillType = thirdColor != null ? FillType.linear3 : FillType.linear2,
        center = null,
        radius = null;
 
@@ -50,12 +54,14 @@ class GooeyZoneShader extends SingleChildRenderObjectWidget {
     required this.color,
     required Color this.secondColor,
     this.thirdColor,
-    this.center,
-    this.radius,
+    AlignmentGeometry this.center = Alignment.center,
+    double this.radius = 0.5,
     this.borderWidth = 0.0,
     this.borderColor = Colors.transparent,
     required super.child,
-  }) : fillType = thirdColor != null ? FillType.radial3 : FillType.radial2,
+  }) : assert(gooiness >= 0, 'Gooiness must be non-negative'),
+       assert(borderWidth >= 0, 'Border width must be non-negative'),
+       fillType = thirdColor != null ? FillType.radial3 : FillType.radial2,
        begin = null,
        end = null;
 
@@ -114,13 +120,15 @@ class GooeyBlobShader extends SingleChildRenderObjectWidget {
     super.key,
     required super.child,
     this.shape = const BlobShapeShader.circle(),
+    this.cutout = false,
   });
 
   final BlobShapeShader shape;
+  final bool cutout;
 
   @override
   RenderGooeyBlobShader createRenderObject(BuildContext context) {
-    return RenderGooeyBlobShader(shape: shape);
+    return RenderGooeyBlobShader(shape: shape, cutout: cutout);
   }
 
   @override
@@ -129,6 +137,7 @@ class GooeyBlobShader extends SingleChildRenderObjectWidget {
     RenderGooeyBlobShader renderObject,
   ) {
     renderObject.shape = shape;
+    renderObject.cutout = cutout;
   }
 }
 
@@ -139,9 +148,6 @@ sealed class BlobShapeShader {
 
   const factory BlobShapeShader.rounded(double borderRadius) =
       _RoundedRectBlobShader;
-
-  const factory BlobShapeShader.superEllipse(double borderRadius) =
-      _SuperEllipseBlobShader;
 }
 
 class _CircleBlobShader extends BlobShapeShader {
@@ -150,11 +156,6 @@ class _CircleBlobShader extends BlobShapeShader {
 
 class _RoundedRectBlobShader extends BlobShapeShader {
   const _RoundedRectBlobShader(this.borderRadius);
-  final double borderRadius;
-}
-
-class _SuperEllipseBlobShader extends BlobShapeShader {
-  const _SuperEllipseBlobShader(this.borderRadius);
   final double borderRadius;
 }
 
@@ -270,17 +271,25 @@ class RenderGooeyZoneShader extends RenderProxyBox {
   }
 
   Future<void> _loadProgram() async {
-    _program = await ui.FragmentProgram.fromAsset('shaders/gooey.frag');
+    try {
+      _program = await ui.FragmentProgram.fromAsset('shaders/gooey.frag');
+    } catch (e) {
+      debugPrint('Error loading shader: $e');
+      _program = null;
+    }
     markNeedsPaint();
   }
 
   void _registerBlob(RenderGooeyBlobShader blob) {
+    if (_blobs.contains(blob)) return;
     _blobs.add(blob);
+    markNeedsBlobsUpdate();
     markNeedsPaint();
   }
 
   void _unregisterBlob(RenderGooeyBlobShader blob) {
     _blobs.remove(blob);
+    markNeedsBlobsUpdate();
     markNeedsPaint();
   }
 
@@ -293,6 +302,26 @@ class RenderGooeyZoneShader extends RenderProxyBox {
   @override
   bool get isRepaintBoundary => true;
 
+  List<RenderGooeyBlobShader>? _effectiveBlobs;
+
+  List<RenderGooeyBlobShader> get effectiveBlobs {
+    if (_effectiveBlobs != null) return _effectiveBlobs!;
+    final normal = <RenderGooeyBlobShader>[];
+    final cutouts = <RenderGooeyBlobShader>[];
+    for (final blob in _blobs) {
+      if (blob.cutout) {
+        cutouts.add(blob);
+      } else {
+        normal.add(blob);
+      }
+    }
+    return _effectiveBlobs = [...normal, ...cutouts];
+  }
+
+  void markNeedsBlobsUpdate() {
+    _effectiveBlobs = null;
+  }
+
   @override
   void paint(PaintingContext context, Offset offset) {
     if (_program == null) {
@@ -303,7 +332,6 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     final w = size.width;
     final h = size.height;
 
-    final blobCount = _blobs.length.clamp(0, maxBlobCount);
     final goo = _gooiness / w;
 
     final shader = _program!.fragmentShader();
@@ -314,8 +342,10 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     shader.setFloat(i++, w);
     shader.setFloat(i++, h);
 
+    final blobs = effectiveBlobs;
+
     shader.setFloat(i++, goo);
-    shader.setFloat(i++, blobCount.toDouble());
+    shader.setFloat(i++, blobs.length.toDouble());
     shader.setFloat(i++, _borderWidth > 0 ? _borderWidth / w : 0.0);
     shader.setFloat(i++, _fillType.value.toDouble());
 
@@ -367,17 +397,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
     const kBlobOffset = 28;
     final kBlobParamsOffset = 60;
 
-    shader.setFloat(i++, offset.dx);
-    shader.setFloat(i++, offset.dy);
-    shader.setFloat(i++, w);
-    shader.setFloat(i++, h);
-
-    shader.setFloat(i++, goo);
-    shader.setFloat(i++, blobCount.toDouble());
-    shader.setFloat(i++, _borderWidth > 0 ? _borderWidth / w : 0.0);
-    shader.setFloat(i++, _fillType.value.toDouble());
-
-    final blobs = _blobs.where((b) => b.hasSize && b.size != Size.zero);
+    Rect? blobBounds;
     for (int b = 0; b < maxBlobCount; b++) {
       final int dataIdx = kBlobOffset + b * 4;
       final int paramsIdx = kBlobParamsOffset + b * 4;
@@ -390,10 +410,18 @@ class RenderGooeyZoneShader extends RenderProxyBox {
           blob.paintBounds,
         );
         final blobSize = blobRect.size;
+        final shouldDraw = blobSize != Size.zero;
 
-        final cx = (blobRect.center.dx - offset.dx) / w;
-        final cy = (blobRect.center.dy - offset.dy) / w;
-
+        final double cx;
+        final double cy;
+        if (shouldDraw) {
+          cx = (blobRect.center.dx - offset.dx) / w;
+          cy = (blobRect.center.dy - offset.dy) / w;
+          blobBounds = blobBounds?.expandToInclude(blobRect) ?? blobRect;
+        } else {
+          cx = 0.0;
+          cy = 0.0;
+        }
         final shape = blob.shape;
         double hw;
         double hh;
@@ -408,11 +436,6 @@ class RenderGooeyZoneShader extends RenderProxyBox {
           hh = blobSize.height * 0.5 / w;
           borderRadius = shape.borderRadius / w;
           type = 1.0;
-        } else if (shape is _SuperEllipseBlobShader) {
-          hw = blobSize.width * 0.5 / w;
-          hh = blobSize.height * 0.5 / w;
-          borderRadius = shape.borderRadius / w;
-          type = 2.0;
         } else {
           hw = blobSize.width * 0.5 / w;
           hh = blobSize.height * 0.5 / w;
@@ -424,7 +447,7 @@ class RenderGooeyZoneShader extends RenderProxyBox {
 
         shader.setFloat(paramsIdx + 0, borderRadius);
         shader.setFloat(paramsIdx + 1, type);
-        shader.setFloat(paramsIdx + 2, 0.0); // unused
+        shader.setFloat(paramsIdx + 2, blob.cutout ? 1.0 : 0.0); // cutout
         shader.setFloat(paramsIdx + 3, 0.0); // unused
       } else {
         shader.setFloat(dataIdx + 0, 0.0);
@@ -438,16 +461,20 @@ class RenderGooeyZoneShader extends RenderProxyBox {
       }
     }
 
-    context.canvas.drawRect(
-      (offset & size).inflate((_borderWidth * 2) + 4),
-      Paint()..shader = shader,
-    );
+    if (blobBounds != null) {
+      final inflated = blobBounds.inflate(
+        (_gooiness * .5) + (_borderWidth * 2),
+      );
+      context.canvas.drawRect(inflated, Paint()..shader = shader);
+    }
     super.paint(context, offset);
   }
 }
 
 class RenderGooeyBlobShader extends RenderProxyBox {
-  RenderGooeyBlobShader({required BlobShapeShader shape}) : _shape = shape;
+  RenderGooeyBlobShader({required BlobShapeShader shape, bool cutout = false})
+    : _shape = shape,
+      _cutout = cutout;
 
   BlobShapeShader _shape;
   set shape(BlobShapeShader value) {
@@ -457,6 +484,15 @@ class RenderGooeyBlobShader extends RenderProxyBox {
   }
 
   BlobShapeShader get shape => _shape;
+
+  bool get cutout => _cutout;
+  bool _cutout;
+  set cutout(bool value) {
+    if (_cutout == value) return;
+    _cutout = value;
+    _zone?.markNeedsBlobsUpdate();
+    markNeedsPaint();
+  }
 
   RenderGooeyZoneShader? _zone;
 
