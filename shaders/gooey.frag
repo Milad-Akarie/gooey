@@ -94,18 +94,6 @@ float sdRoundRect(vec2 p, vec2 c, vec2 b, float r) {
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
 
-// additional smooth operations for blending blobs
-float smoothUnion(float d1, float d2, float k) {
-    float h = clamp(0.5 + 0.5 * (d2 - d1) / k, 0.0, 1.0);
-    return mix(d2, d1, h) - k * h * (1.0 - h);
-}
-
-// Smooth subtraction for cutout blobs
-float smoothSubtract(float base, float sub, float k) {
-    float h = clamp(0.5 - 0.5 * (base + sub) / k, 0.0, 1.0);
-    return mix(base, -sub, h) + k * h * (1.0 - h);
-}
-
 // Evaluates the distance for a single blob based on its type and parameters
 float evalBlob(vec2 p, vec4 b, vec4 params) {
     vec2 c = b.xy;
