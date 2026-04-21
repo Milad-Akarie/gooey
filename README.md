@@ -59,6 +59,7 @@ GooeyZone(
 Control the gooey behavior with these parameters:
 
 - `gooiness` — The intensity of the liquid-like deformation (higher = more pronounced merge). Defaults to 30.
+- `softness` — Controls the anti-aliasing band width of the SDF edges. Defaults to a physically correct 1-pixel AA based on device pixel ratio (recommended). For sharper edges use lower values like `0.001`, for softer/blurry edges use higher values like `0.01`. Values above `0.02` will noticeably blur.
 - `borderWidth` — Width of the border around the zone. Defaults to 0.0 (no border).
 - `borderColor` — Color of the border. Defaults to transparent.
 
@@ -66,6 +67,7 @@ Control the gooey behavior with these parameters:
 GooeyZone(
   color: Colors.indigo,
   gooiness: 40,        // More pronounced merge
+  softness: (0.001..0.01) // defaults to 1-pixel AA based on dpr (recommended)
   borderWidth: 2.0,    // Visible border
   borderColor: Colors.white,
   child: // ...
