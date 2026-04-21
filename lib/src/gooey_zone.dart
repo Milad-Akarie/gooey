@@ -30,19 +30,11 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   /// Creates a [GooeyZone] with the given parameters.
   const GooeyZone({
     super.key,
-
-    /// The intensity of the gooey effect. Higher values create more
-    /// pronounced liquid-like deformation. Must be non-negative.
     this.gooiness = 30,
-
-    /// The primary color of the gooey zone.
+    this.softness,
     required this.color,
     required super.child,
-
-    /// The width of the border around the zone. Defaults to 0.0 (no border).
     this.borderWidth = 0.0,
-
-    /// The color of the border. Defaults to transparent.
     this.borderColor = Colors.transparent,
   }) : assert(gooiness >= 0, 'Gooiness must be non-negative'),
        assert(borderWidth >= 0, 'Border width must be non-negative'),
@@ -78,30 +70,14 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   /// ```
   const GooeyZone.linearGradient({
     super.key,
-
-    /// The intensity of the gooey effect. Higher values create more
-    /// pronounced liquid-like deformation. Must be non-negative.
     required this.gooiness,
-
-    /// The primary (starting) color of the gradient.
+    this.softness,
     required this.color,
-
-    /// The second color in the gradient.
     required Color this.secondColor,
-
-    /// An optional third color for a three-color gradient.
     this.thirdColor,
-
-    /// The start point of the gradient. Defaults to [Alignment.centerLeft].
     this.begin = Alignment.centerLeft,
-
-    /// The end point of the gradient. Defaults to [Alignment.centerRight].
     this.end = Alignment.centerRight,
-
-    /// The width of the border around the zone. Defaults to 0.0 (no border).
     this.borderWidth = 0.0,
-
-    /// The color of the border. Defaults to transparent.
     this.borderColor = Colors.transparent,
     required super.child,
   }) : assert(gooiness >= 0, 'Gooiness must be non-negative'),
@@ -134,30 +110,14 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   /// ```
   const GooeyZone.radialGradient({
     super.key,
-
-    /// The intensity of the gooey effect. Higher values create more
-    /// pronounced liquid-like deformation. Must be non-negative.
     required this.gooiness,
-
-    /// The primary (center) color of the gradient.
+    this.softness,
     required this.color,
-
-    /// The second (outer) color in the gradient.
     required Color this.secondColor,
-
-    /// An optional third color for a three-color gradient.
     this.thirdColor,
-
-    /// The center point of the gradient. Defaults to [Alignment.center].
     AlignmentGeometry this.center = Alignment.center,
-
-    /// The radius of the gradient. Defaults to 0.5.
     double this.radius = 0.5,
-
-    /// The width of the border around the zone. Defaults to 0.0 (no border).
     this.borderWidth = 0.0,
-
-    /// The color of the border. Defaults to transparent.
     this.borderColor = Colors.transparent,
     required super.child,
   }) : assert(gooiness >= 0, 'Gooiness must be non-negative'),
@@ -169,6 +129,15 @@ class GooeyZone extends SingleChildRenderObjectWidget {
   /// The intensity of the gooey effect. Higher values create more
   /// pronounced liquid-like deformation at the edges.
   final double gooiness;
+
+  /// Controls the anti-aliasing band width of the SDF edges.
+  ///
+  /// If null, defaults to a physically correct 1-pixel AA based on
+  /// device pixel ratio: `1.0 / (size.width * devicePixelRatio)`.
+  ///
+  /// Typical values range from `0.001` (sharp) to `0.01` (soft/blurry).
+  /// Values above `0.02` will noticeably blur the edges.
+  final double? softness;
 
   /// The primary color of the gooey zone.
   final Color color;
@@ -214,6 +183,8 @@ class GooeyZone extends SingleChildRenderObjectWidget {
       gradientRadius: radius,
       borderWidth: borderWidth,
       borderColor: borderColor,
+      softness: softness,
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
     );
   }
 
@@ -231,7 +202,9 @@ class GooeyZone extends SingleChildRenderObjectWidget {
       ..gradientRadius = radius
       ..borderWidth = borderWidth
       ..borderColor = borderColor
-      ..textDirection = Directionality.maybeOf(context);
+      ..softness = softness
+      ..textDirection = Directionality.maybeOf(context)
+      ..devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
   }
 }
 
@@ -307,6 +280,8 @@ class RenderGooeyZone extends RenderProxyBox {
     double? gradientRadius,
     required double borderWidth,
     required Color borderColor,
+    double? softness,
+    double devicePixelRatio = 1.0,
   }) : _gooiness = gooiness,
        _color = color,
        _fillType = fillType,
@@ -317,7 +292,9 @@ class RenderGooeyZone extends RenderProxyBox {
        _gradientFocal = gradientFocal,
        _gradientRadius = gradientRadius,
        _borderWidth = borderWidth,
-       _borderColor = borderColor {
+       _borderColor = borderColor,
+       _softness = softness,
+       _devicePixelRatio = devicePixelRatio {
     _loadProgram();
   }
 
@@ -326,10 +303,20 @@ class RenderGooeyZone extends RenderProxyBox {
   final List<RenderGooeyBlob> _blobs = [];
   TextDirection? _textDirection;
 
+  double? _softness;
   double _gooiness;
   set gooiness(double value) {
     if (_gooiness == value) return;
     _gooiness = value;
+    markNeedsPaint();
+  }
+
+  /// Softness controls the anti-aliasing band width of the SDF edges.
+  /// If null, defaults to a physically correct 1-pixel AA based on device pixel ratio.
+  double? get softness => _softness;
+  set softness(double? value) {
+    if (_softness == value) return;
+    _softness = value;
     markNeedsPaint();
   }
 
@@ -400,6 +387,13 @@ class RenderGooeyZone extends RenderProxyBox {
   set borderColor(Color value) {
     if (_borderColor == value) return;
     _borderColor = value;
+    markNeedsPaint();
+  }
+
+  double _devicePixelRatio = 1.0;
+  set devicePixelRatio(double value) {
+    if (_devicePixelRatio == value) return;
+    _devicePixelRatio = value;
     markNeedsPaint();
   }
 
@@ -511,14 +505,14 @@ class RenderGooeyZone extends RenderProxyBox {
 
     // Gradient params
     final textDir = _textDirection ?? TextDirection.ltr;
-    if (_fillType == FillType.linear2 || _fillType == FillType.linear3) {
+    if (_fillType.isLinearGradient) {
       final start = _gradientStart?.resolve(textDir) ?? Alignment.centerLeft;
       final end = _gradientEnd?.resolve(textDir) ?? Alignment.centerRight;
       shader.setFloat(i++, (start.x + 1.0) * 0.5);
       shader.setFloat(i++, (start.y + 1.0) * 0.5);
       shader.setFloat(i++, (end.x + 1.0) * 0.5);
       shader.setFloat(i++, (end.y + 1.0) * 0.5);
-    } else if (_fillType == FillType.radial2 || _fillType == FillType.radial3) {
+    } else if (_fillType.isRadialGradient) {
       final focal = _gradientFocal?.resolve(textDir) ?? Alignment.center;
       final radius = _gradientRadius ?? 0.5;
       shader.setFloat(i++, (focal.x + 1.0) * 0.5);
@@ -532,9 +526,13 @@ class RenderGooeyZone extends RenderProxyBox {
       shader.setFloat(i++, 0.0);
     }
 
+    // Softness (anti-aliasing band width)
+    final actualSoftness = _softness ?? (w > 0 ? 1.0 / (w * _devicePixelRatio) : 0.001);
+    shader.setFloat(i++, actualSoftness);
+
     Rect? blobBounds;
-    const kBlobOffset = 28;
-    const kBlobParamsOffset = 68;
+    const kBlobOffset = 29;
+    const kBlobParamsOffset = 69;
 
     for (int b = 0; b < _maxBlobCount; b++) {
       final int dataIdx = (kBlobOffset + b * 4);
@@ -720,6 +718,11 @@ enum FillType {
   /// Three-color radial gradient fill.
   radial3(4)
   ;
+
+  /// Whether this fill type uses a radial gradient.
+  bool get isRadialGradient => this == radial2 || this == radial3;
+  /// Whether this fill type uses a linear gradient.
+  bool get isLinearGradient => this == linear2 || this == linear3;
 
   const FillType(this.value);
 

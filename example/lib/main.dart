@@ -38,6 +38,96 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 4;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF121416),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _AnimatedBlobs(_counter),
+            const SizedBox(height: 48),
+            Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: GooeyZone(
+                color: Colors.indigo,
+                gooiness: 30,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: .min,
+                  spacing: 2,
+                  children: [
+                    GooeyBlob(
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: IconButton(
+                          style: IconButton.styleFrom(
+                            padding: const EdgeInsets.all(16),
+                            backgroundColor: Colors.indigoAccent,
+                          ),
+                          onPressed: _counter <= 2
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _counter--;
+                                  });
+                                },
+                          icon: Icon(Icons.remove, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    GooeyBlob(
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Text(
+                          '$_counter',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontFamily: 'RobotoMono',
+                            fontWeight: FontWeight.bold,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                    ),
+                    GooeyBlob(
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: IconButton(
+                          style: IconButton.styleFrom(
+                            padding: const EdgeInsets.all(16),
+                            backgroundColor: Colors.indigoAccent,
+                          ),
+                          onPressed: _counter >= 5
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _counter++;
+                                  });
+                                },
+                          icon: Icon(Icons.add, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AnimatedBlobs extends StatefulWidget {
   final int counter;
   const _AnimatedBlobs(this.counter);
@@ -168,96 +258,6 @@ class _AnimatedBlobsState extends State<_AnimatedBlobs>
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 4;
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF121416),
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _AnimatedBlobs(_counter),
-            const SizedBox(height: 48),
-            Padding(
-              padding: const EdgeInsets.all(2.0),
-              child: GooeyZone(
-                color: Colors.indigo,
-                gooiness: 30,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: .min,
-                  spacing: 2,
-                  children: [
-                    GooeyBlob(
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: IconButton(
-                          style: IconButton.styleFrom(
-                            padding: const EdgeInsets.all(16),
-                            backgroundColor: Colors.indigoAccent,
-                          ),
-                          onPressed: _counter <= 2
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _counter--;
-                                  });
-                                },
-                          icon: Icon(Icons.remove, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    GooeyBlob(
-                      child: Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Text(
-                          '$_counter',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontFamily: 'RobotoMono',
-                            fontWeight: FontWeight.bold,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ),
-                    ),
-                    GooeyBlob(
-                      child: Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: IconButton(
-                          style: IconButton.styleFrom(
-                            padding: const EdgeInsets.all(16),
-                            backgroundColor: Colors.indigoAccent,
-                          ),
-                          onPressed: _counter >= 5
-                              ? null
-                              : () {
-                                  setState(() {
-                                    _counter++;
-                                  });
-                                },
-                          icon: Icon(Icons.add, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
