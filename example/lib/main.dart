@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gooey/gooey.dart';
 
@@ -40,6 +41,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 4;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,6 +54,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+             
+            const SizedBox(height: 48),
             _AnimatedBlobs(_counter),
             const SizedBox(height: 48),
             Padding(
@@ -85,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     GooeyBlob(
                       child: Padding(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(6),
                         child: Text(
                           '$_counter',
                           style: TextStyle(
@@ -106,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             padding: const EdgeInsets.all(16),
                             backgroundColor: Colors.indigoAccent,
                           ),
-                          onPressed: _counter >= 5
+                          onPressed: _counter >= 7
                               ? null
                               : () {
                                   setState(() {
